@@ -2,7 +2,7 @@
 <html lang="he" dir="rtl">
 <head>
 <meta charset="utf-8">
-<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,minimum-scale=1,user-scalable=no,viewport-fit=cover">
 <meta name="theme-color" content="#2D6A57">
 <link rel="icon" href="/icon.svg" type="image/svg+xml">
 <link rel="icon" href="/icon-192.png" type="image/png" sizes="192x192">
@@ -40,6 +40,8 @@
   --late:#F08A72; --late-soft:#3A221C; --soon:#E8B55A; --soon-soft:#3A2E17; --ok:#7CCB94; --ok-soft:#1C3324;
   --shadow:0 1px 2px rgba(0,0,0,.3),0 6px 24px rgba(0,0,0,.35); color-scheme:dark}
 *{box-sizing:border-box}
+html{touch-action:manipulation;-webkit-text-size-adjust:100%;text-size-adjust:100%}
+input,select,textarea{font-size:16px!important}
 body{background:var(--bg);color:var(--ink);font-family:var(--f-body);font-size:16px;line-height:1.45;direction:rtl}
 .wrap{max-width:640px;margin:0 auto;padding-left:max(16px,env(safe-area-inset-left,0px));padding-right:max(16px,env(safe-area-inset-right,0px));padding-block:20px 120px}
 button{font:inherit;color:inherit;cursor:pointer}
@@ -80,7 +82,9 @@ h1{font-family:var(--f-display);font-weight:400;font-size:30px;line-height:1.1;m
 .group h2{font-size:15px;font-weight:700;margin:0 4px 8px;display:flex;align-items:center;gap:8px;letter-spacing:.01em}
 .group h2 .dot{width:8px;height:8px;border-radius:50%;background:var(--muted)}
 .group h2 .cnt{color:var(--muted);font-weight:500}
-.group.late h2 .dot{background:var(--late)} .group.today h2 .dot{background:var(--soon)} .group.week h2 .dot{background:var(--ok)}
+.group.late h2 .dot,.group.cat-high h2 .dot{background:var(--late)} .group.cat-mid h2 .dot{background:var(--soon)} .group.cat-low h2 .dot{background:var(--ok)}
+.group.cat-high h2,.group.cat-mid h2,.group.cat-low h2,.group.cat-none h2{font-size:17px}
+.group.zz h2 .dot{background:var(--late)} .group.today h2 .dot{background:var(--soon)} .group.week h2 .dot{background:var(--ok)}
 .list{background:var(--surface);border-radius:18px;box-shadow:var(--shadow);overflow:hidden}
 .task{display:grid;grid-template-columns:auto 1fr auto;gap:12px;align-items:center;padding:12px 14px;border-top:1px solid var(--line)}
 .task:first-child{border-top:0}
@@ -102,7 +106,7 @@ h1{font-family:var(--f-display);font-weight:400;font-size:30px;line-height:1.1;m
 .task.s-today .pill{background:var(--soon-soft);color:var(--soon)}
 .task.s-none .pill{background:var(--sunk);color:var(--muted)}
 .prio{display:inline-block;width:7px;height:7px;border-radius:2px;margin-left:2px;vertical-align:middle}
-.prio.high{background:var(--late)} .prio.mid{background:var(--soon)} .prio.low{background:var(--muted)}
+.prio.high{background:var(--late)} .prio.mid{background:var(--soon)} .prio.low{background:var(--muted)} .prio.none{background:var(--line)}
 
 .empty{background:var(--surface);border-radius:18px;padding:28px 20px;text-align:center;color:var(--muted);box-shadow:var(--shadow);margin-top:22px}
 .empty b{display:block;color:var(--ink);font-size:17px;margin-bottom:4px}
@@ -124,7 +128,26 @@ h1{font-family:var(--f-display);font-weight:400;font-size:30px;line-height:1.1;m
 .grab{width:40px;height:5px;border-radius:3px;background:var(--line);margin:0 auto 12px}
 .sheet h3{font-family:var(--f-display);font-weight:400;font-size:24px;margin:0 0 4px}
 .sheet .sub{color:var(--muted);font-size:14px;margin-bottom:14px}
-.quick{display:grid;grid-template-columns:2fr 1fr 1fr;gap:8px;margin-bottom:16px}
+.quick{display:grid;grid-template-columns:repeat(3,1fr);gap:8px;margin-bottom:16px}
+.quick .wide{grid-column:1/-1}
+.datebtn{width:100%;border:1px solid var(--line);background:var(--sunk);color:var(--ink);border-radius:12px;padding:11px 12px;text-align:right;font-variant-numeric:tabular-nums;display:flex;align-items:center;gap:8px;min-height:46px}
+.datebtn::before{content:"";width:18px;height:18px;flex:none;background:currentColor;opacity:.55;-webkit-mask:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='black' stroke-width='2'%3E%3Crect x='3' y='5' width='18' height='16' rx='3'/%3E%3Cpath d='M3 10h18M8 3v4M16 3v4'/%3E%3C/svg%3E") center/contain no-repeat;mask:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='black' stroke-width='2'%3E%3Crect x='3' y='5' width='18' height='16' rx='3'/%3E%3Cpath d='M3 10h18M8 3v4M16 3v4'/%3E%3C/svg%3E") center/contain no-repeat}
+.datebtn.empty{color:var(--muted)}
+.pick-scrim{position:fixed;inset:0;z-index:30;background:rgba(10,16,13,.35);opacity:0;pointer-events:none;transition:opacity .15s}
+.pick-scrim.on{opacity:1;pointer-events:auto}
+.picker{position:fixed;z-index:31;left:50%;top:50%;width:min(360px,calc(100% - 32px));transform:translate(-50%,-46%);opacity:0;pointer-events:none;transition:.18s;background:var(--surface);border-radius:22px;box-shadow:0 20px 60px rgba(0,0,0,.3);padding:14px}
+.picker.on{opacity:1;transform:translate(-50%,-50%);pointer-events:auto}
+.pk-head{display:flex;align-items:center;justify-content:space-between;margin-bottom:8px}
+.pk-head b{font-family:var(--f-display);font-weight:400;font-size:19px}
+.pk-nav{display:grid;place-items:center;width:40px;height:40px;border-radius:50%;border:0;background:var(--sunk);font-size:22px;line-height:1;color:var(--accent)}
+.pk-grid{display:grid;grid-template-columns:repeat(7,1fr);gap:2px;text-align:center}
+.pk-grid .wd{font-size:12px;color:var(--muted);font-weight:700;padding:4px 0}
+.pk-grid button{aspect-ratio:1;max-width:100%;border:0;background:none;border-radius:50%;font-size:16px;font-variant-numeric:tabular-nums}
+.pk-nav:disabled{opacity:.3}
+.pk-grid button:disabled{opacity:.28;cursor:default}
+.pk-grid button.today{box-shadow:inset 0 0 0 2px var(--accent);color:var(--accent);font-weight:800}
+.pk-grid button.sel{background:var(--accent);color:var(--accent-ink);font-weight:800;box-shadow:none}
+.pk-foot{display:grid;grid-template-columns:repeat(3,1fr);gap:8px;margin-top:10px}
 .btn{border:1px solid var(--line);background:var(--surface);border-radius:12px;padding:11px 10px;font-weight:700;font-size:15px}
 .btn.primary{background:var(--accent);border-color:var(--accent);color:var(--accent-ink)}
 .btn.danger{color:var(--late);border-color:var(--late-soft)}
@@ -177,8 +200,9 @@ h1{font-family:var(--f-display);font-weight:400;font-size:30px;line-height:1.1;m
       <input id="q" type="search" placeholder="חיפוש משימה" autocomplete="off">
     </div>
     <div class="seg" id="views">
-      <button data-v="urgency" aria-pressed="true">לפי דחיפות</button>
-      <button data-v="room" aria-pressed="false">לפי חדר</button>
+      <button data-v="category" aria-pressed="true">קטגוריות</button>
+      <button data-v="urgency" aria-pressed="false">דחיפות</button>
+      <button data-v="room" aria-pressed="false">חדרים</button>
       <button data-v="history" aria-pressed="false">מה עשינו</button>
     </div>
     <div class="chips" id="chips"></div>
@@ -196,21 +220,22 @@ h1{font-family:var(--f-display);font-weight:400;font-size:30px;line-height:1.1;m
     <h3 id="sh-title"></h3>
     <div class="sub" id="sh-sub"></div>
     <div class="quick" id="sh-quick">
-      <button class="btn primary" id="sh-done">✓ בוצע היום</button>
+      <button class="btn primary wide" id="sh-done">✓ בוצע היום</button>
+      <button class="btn" id="sh-doneon">בוצע בתאריך…</button>
       <button class="btn" id="sh-snooze1">דחה ליום</button>
       <button class="btn" id="sh-snooze7">דחה לשבוע</button>
     </div>
     <div class="field"><label for="f-name">שם המשימה</label><input id="f-name" type="text" placeholder="למשל: ניקוי מקרר"></div>
     <div class="row2">
       <div class="field"><label for="f-room">חדר</label><select id="f-room"></select></div>
-      <div class="field"><label for="f-prio">חשיבות</label><select id="f-prio"><option value="high">חשוב</option><option value="mid">בינוני</option><option value="low">פחות חשוב</option></select></div>
+      <div class="field"><label for="f-prio">סוג משימה</label><select id="f-prio"><option value="high">משימות לשבוע הזה</option><option value="mid">חשיבות בינונית</option><option value="low">משימות פחות חשובות</option><option value="none">-</option></select></div>
     </div>
     <div class="field"><span class="lab">כל כמה זמן</span>
       <div class="opts" id="f-int"></div>
     </div>
     <div class="row2">
-      <div class="field"><label for="f-last">פעם אחרונה</label><input id="f-last" type="date"></div>
-      <div class="field"><label for="f-next">תאריך יעד ידני</label><input id="f-next" type="date"><div class="hint">גובר על החישוב</div></div>
+      <div class="field"><span class="lab">פעם אחרונה</span><button type="button" class="datebtn" id="f-last" data-value=""></button></div>
+      <div class="field"><span class="lab">פעם הבאה ידני</span><button type="button" class="datebtn" id="f-next" data-value=""></button><div class="hint">גובר על החישוב</div></div>
     </div>
     <div class="preview"><div><span>הפעם הבאה</span><b id="pv-next">—</b></div><div><span>ימים שנותרו</span><b id="pv-rem">—</b></div></div>
     <div class="field"><label for="f-notes">הערות</label><textarea id="f-notes" placeholder="חומר ניקוי, טיפים..."></textarea></div>
@@ -221,11 +246,27 @@ h1{font-family:var(--f-display);font-weight:400;font-size:30px;line-height:1.1;m
     </div>
   </div>
 </div>
+<div class="pick-scrim" id="pk-scrim"></div>
+<div class="picker" id="picker" role="dialog" aria-modal="true" aria-labelledby="pk-title">
+  <div class="pk-head">
+    <button type="button" class="pk-nav" id="pk-prev" aria-label="חודש קודם"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"><path d="m9 6 6 6-6 6"/></svg></button>
+    <b id="pk-title"></b>
+    <button type="button" class="pk-nav" id="pk-next" aria-label="חודש הבא"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"><path d="m15 6-6 6 6 6"/></svg></button>
+  </div>
+  <div class="pk-grid" id="pk-grid"></div>
+  <div class="pk-foot">
+    <button type="button" class="btn" id="pk-today">היום</button>
+    <button type="button" class="btn" id="pk-clear">ללא תאריך</button>
+    <button type="button" class="btn" id="pk-cancel">ביטול</button>
+  </div>
+</div>
 <div class="toast" id="toast" role="status"><span id="toast-t"></span><button id="toast-undo">ביטול</button></div>
 
 <script>
 const ROOMS=["מטבח","סלון","חדר שינה","אמבטיה ושירותים","כביסה","אוראו","כללי"];
-const PRIO={high:"חשוב",mid:"בינוני",low:"פחות חשוב"};
+const CATS=["high","mid","low","none"];
+const CAT={high:"משימות לשבוע הזה",mid:"חשיבות בינונית",low:"משימות פחות חשובות",none:"-"};
+const PRIO={high:"לשבוע הזה",mid:"בינונית",low:"פחות חשובה",none:"ללא סוג"};
 const INTS=[3,7,14,21,28,56,90];
 const $=s=>document.querySelector(s);
 
@@ -309,9 +350,9 @@ async function removeTask(id){
 function newId(){return"t"+Date.now().toString(36)+Math.random().toString(36).slice(2,6)}
 
 /* ---------- UI state ---------- */
-let view="urgency", room="הכל", quick=null, query="";
-try{const s=JSON.parse(localStorage.getItem("house-ui")||"{}");if(s.view)view=s.view;if(s.room)room=s.room}catch(e){}
-function saveUI(){try{localStorage.setItem("house-ui",JSON.stringify({view,room}))}catch(e){}}
+let view="category", room="הכל", quick=null, query="";
+try{const s=JSON.parse(localStorage.getItem("house-ui2")||"{}");if(s.view)view=s.view;if(s.room)room=s.room}catch(e){}
+function saveUI(){try{localStorage.setItem("house-ui2",JSON.stringify({view,room}))}catch(e){}}
 
 function hebDate(){
   try{return new Intl.DateTimeFormat("he-u-ca-hebrew",{day:"numeric",month:"long",year:"numeric"}).format(new Date())}catch(e){return""}
@@ -327,7 +368,7 @@ function filtered(){
     return true;
   });
 }
-const prioRank={high:0,mid:1,low:2};
+const prioRank={high:0,mid:1,low:2,none:3};
 function sortTasks(a){return a.sort((x,y)=>{
   const rx=x.rem==null?1e9:x.rem, ry=y.rem==null?1e9:y.rem;
   if(rx<0&&ry<0){const p=prioRank[x.priority]-prioRank[y.priority];if(p)return p}
@@ -353,7 +394,7 @@ function renderChips(){
 }
 
 const esc=s=>String(s??"").replace(/[&<>"]/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;"})[c]);
-function taskRow(t,showRoom=true){
+function taskRow(t,showRoom=true,showPrio=true){
   const s=statusOf(t.rem);
   const elapsed=t.last&&t.interval?Math.min(1,Math.max(0,diff(TODAY,t.last)/((nextOf(t)?diff(nextOf(t),t.last):t.interval)||1))):0;
   const doneToday=t.last===TODAY;
@@ -361,15 +402,15 @@ function taskRow(t,showRoom=true){
     <button class="check" data-done="${t.id}" aria-label="סמן כבוצע: ${esc(t.name)}"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3"><path d="m5 12 5 5 9-10"/></svg></button>
     <button class="body" data-open="${t.id}">
       <div class="name">${esc(t.name)}</div>
-      <div class="meta"><span><i class="prio ${t.priority}"></i> ${PRIO[t.priority]}</span>${showRoom?`<span class="sep">·</span><span>${esc(t.room)}</span>`:""}<span class="sep">·</span><span>${intLabel(t.interval)}</span>${t.last?`<span class="sep">·</span><span>אחרון ${fmtShort(t.last)}</span>`:""}</div>
+      <div class="meta">${showPrio?`<span><i class="prio ${t.priority||"none"}"></i> ${PRIO[t.priority]||PRIO.none}</span><span class="sep">·</span>`:""}${showRoom?`<span>${esc(t.room)}</span><span class="sep">·</span>`:""}<span>${intLabel(t.interval)}</span>${t.last?`<span class="sep">·</span><span>אחרון ${fmtShort(t.last)}</span>`:""}</div>
       <div class="bar"><i style="width:${(doneToday?0:elapsed)*100}%"></i></div>
     </button>
     <span class="pill">${doneToday?"בוצע היום":remLabel(t.rem)}</span>
   </div>`;
 }
-function group(cls,title,items,showRoom){
+function group(cls,title,items,showRoom=true,showPrio=true){
   if(!items.length)return"";
-  return `<section class="group ${cls}"><h2><span class="dot"></span>${title}<span class="cnt">${items.length}</span></h2><div class="list">${items.map(t=>taskRow(t,showRoom)).join("")}</div></section>`;
+  return `<section class="group ${cls}"><h2><span class="dot"></span>${title}<span class="cnt">${items.length}</span></h2><div class="list">${items.map(t=>taskRow(t,showRoom,showPrio)).join("")}</div></section>`;
 }
 
 function render(){
@@ -394,6 +435,11 @@ function render(){
 
   const items=sortTasks(filtered());
   if(!items.length){main.innerHTML=`<div class="empty"><b>אין משימות שמתאימות</b>נסו לשנות חיפוש או סינון.</div>`;return}
+  if(view==="category"){
+    const byRem=a=>a.sort((x,y)=>(x.rem??1e9)-(y.rem??1e9));
+    main.innerHTML=CATS.map(c=>group("cat-"+c,c==="none"?"-":CAT[c],byRem(items.filter(t=>(t.priority||"none")===c)),true,false)).join("");
+    return;
+  }
   if(view==="room"){
     main.innerHTML=ROOMS.map(r=>{const g=items.filter(t=>t.room===r);const late=g.filter(t=>t.rem!=null&&t.rem<0).length;return group(late?"late":"week",r+(late?` · ${late} באיחור`:""),g,false)}).join("");
     return;
@@ -433,7 +479,7 @@ document.addEventListener("click",e=>{
   const d=e.target.closest("[data-done]");if(d){const t=tasks.get(d.dataset.done);if(t&&t.last===TODAY){/* undo today's tick */const h=(t.history||[]).filter(x=>x!==TODAY);writeTask(d.dataset.done,{...t,last:h[0]||null,history:h})}else markDone(d.dataset.done);return}
   const o=e.target.closest("[data-open]");if(o){openSheet(o.dataset.open);return}
   const c=e.target.closest("[data-r]");if(c){room=c.dataset.r;saveUI();render();return}
-  const s=e.target.closest(".stat");if(s){quick=quick===s.dataset.f?null:s.dataset.f;if(view!=="urgency")view="urgency";render();return}
+  const s=e.target.closest(".stat");if(s){quick=quick===s.dataset.f?null:s.dataset.f;if(view==="history")view="category";render();return}
   const v=e.target.closest("#views button");if(v){view=v.dataset.v;quick=null;saveUI();render();return}
 });
 $("#q").addEventListener("input",e=>{query=e.target.value;render()});
@@ -448,8 +494,10 @@ function renderInts(){
 }
 $("#f-int").addEventListener("click",e=>{const b=e.target.closest("[data-int]");if(b){editInt=+b.dataset.int;renderInts();updatePreview()}});
 $("#f-int").addEventListener("input",e=>{if(e.target.id==="f-custom"){const n=parseInt(e.target.value);if(n>0){editInt=n;document.querySelectorAll("#f-int button").forEach(b=>b.setAttribute("aria-pressed",+b.dataset.int===n))}updatePreview()}});
-["#f-last","#f-next"].forEach(s=>$(s).addEventListener("input",updatePreview));
-function draft(){return{name:$("#f-name").value.trim(),room:$("#f-room").value,priority:$("#f-prio").value,interval:editInt,last:$("#f-last").value||null,manualNext:$("#f-next").value||null,notes:$("#f-notes").value.trim()}}
+function setDateBtn(el,v,emptyText){el.dataset.value=v||"";el.textContent=v?fmt(v):emptyText;el.classList.toggle("empty",!v)}
+$("#f-last").onclick=()=>openPicker({value:$("#f-last").dataset.value,maxToday:true,onPick:v=>{setDateBtn($("#f-last"),v,"לא בוצע עדיין");updatePreview()}});
+$("#f-next").onclick=()=>openPicker({value:$("#f-next").dataset.value,onPick:v=>{setDateBtn($("#f-next"),v,"לפי התדירות");updatePreview()}});
+function draft(){return{name:$("#f-name").value.trim(),room:$("#f-room").value,priority:$("#f-prio").value,interval:editInt,last:$("#f-last").dataset.value||null,manualNext:$("#f-next").dataset.value||null,notes:$("#f-notes").value.trim()}}
 function updatePreview(){const d=draft(),n=nextOf(d),r=remOf(d);$("#pv-next").textContent=n?fmt(n):"—";$("#pv-rem").textContent=r==null?"—":r;$("#pv-rem").style.color=r!=null&&r<0?"var(--late)":""}
 
 function openSheet(id){
@@ -459,7 +507,7 @@ function openSheet(id){
   $("#sh-sub").textContent=id?`${remLabel(remOf(t))} · ${intLabel(t.interval)}`:"מלאו שם, תדירות ומתי בוצעה לאחרונה.";
   $("#sh-quick").hidden=!id;$("#sh-del").hidden=!id;$("#sh-histwrap").hidden=!id||!(t.history||[]).length;
   $("#f-name").value=t.name;$("#f-room").value=t.room;$("#f-prio").value=t.priority;editInt=t.interval||7;renderInts();
-  $("#f-last").value=t.last||"";$("#f-next").value=t.manualNext||"";$("#f-notes").value=t.notes||"";
+  setDateBtn($("#f-last"),t.last,"לא בוצע עדיין");setDateBtn($("#f-next"),t.manualNext,"לפי התדירות");$("#f-notes").value=t.notes||"";
   const h=t.history||[];
   if(h.length>1){const gaps=h.slice(0,-1).map((d,i)=>diff(d,h[i+1]));const avg=Math.round(gaps.reduce((a,b)=>a+b,0)/gaps.length);$("#sh-hist").textContent=h.slice(0,8).map(fmt).join(" · ")+`  —  בממוצע כל ${avg} ימים`}
   else $("#sh-hist").textContent=h.map(fmt).join(" · ");
@@ -469,7 +517,7 @@ function openSheet(id){
 }
 function closeSheet(){$("#scrim").classList.remove("on");$("#sheet").classList.remove("on");editId=null}
 $("#scrim").onclick=closeSheet;
-document.addEventListener("keydown",e=>{if(e.key==="Escape")closeSheet()});
+document.addEventListener("keydown",e=>{if(e.key==="Escape"){if(pk)closePicker();else closeSheet()}});
 $("#add").onclick=()=>openSheet(null);
 $("#sh-save").onclick=()=>{
   const d=draft();if(!d.name){$("#f-name").focus();$("#f-name").placeholder="צריך שם למשימה";return}
@@ -480,6 +528,34 @@ $("#sh-save").onclick=()=>{
   showToast(prev?"השינויים נשמרו":"המשימה נוספה",false);
 };
 $("#sh-done").onclick=()=>{const id=editId;closeSheet();markDone(id)};
+$("#sh-doneon").onclick=()=>{const id=editId;openPicker({value:"",maxToday:true,noClear:true,onPick:v=>{if(!v)return;closeSheet();markDone(id,v)}})};
+
+/* ---------- date picker: always opens on the current month ---------- */
+let pk=null,pkMonth=null;
+const MONTHS=["ינואר","פברואר","מרץ","אפריל","מאי","יוני","יולי","אוגוסט","ספטמבר","אוקטובר","נובמבר","דצמבר"];
+function openPicker(opts){
+  pk=opts;const t=parse(TODAY);pkMonth=new Date(t.getFullYear(),t.getMonth(),1);
+  $("#pk-clear").hidden=!!opts.noClear;renderPicker();
+  $("#pk-scrim").classList.add("on");$("#picker").classList.add("on");
+}
+function closePicker(){$("#pk-scrim").classList.remove("on");$("#picker").classList.remove("on");pk=null}
+function renderPicker(){
+  const y=pkMonth.getFullYear(),m=pkMonth.getMonth();
+  $("#pk-title").textContent=MONTHS[m]+" "+y;
+  const first=new Date(y,m,1).getDay(),days=new Date(y,m+1,0).getDate();
+  let h=["א׳","ב׳","ג׳","ד׳","ה׳","ו׳","ש׳"].map(d=>`<span class="wd">${d}</span>`).join("");
+  for(let i=0;i<first;i++)h+="<span></span>";
+  for(let d=1;d<=days;d++){const v=iso(new Date(y,m,d));const dis=pk.maxToday&&v>TODAY;
+    h+=`<button type="button" data-day="${v}" class="${v===TODAY?"today":""}${v===pk.value?" sel":""}"${dis?" disabled":""} aria-label="${fmt(v)}">${d}</button>`}
+  $("#pk-grid").innerHTML=h;
+  const nextMonth=iso(new Date(y,m+1,1));$("#pk-next").disabled=!!pk.maxToday&&nextMonth>TODAY;
+}
+$("#pk-prev").onclick=()=>{pkMonth.setMonth(pkMonth.getMonth()-1);renderPicker()};
+$("#pk-next").onclick=()=>{pkMonth.setMonth(pkMonth.getMonth()+1);renderPicker()};
+$("#pk-grid").addEventListener("click",e=>{const b=e.target.closest("[data-day]");if(!b||b.disabled)return;const f=pk.onPick;closePicker();f(b.dataset.day)});
+$("#pk-today").onclick=()=>{const f=pk.onPick;closePicker();f(TODAY)};
+$("#pk-clear").onclick=()=>{const f=pk.onPick;closePicker();f(null)};
+$("#pk-cancel").onclick=closePicker;$("#pk-scrim").onclick=closePicker;
 $("#sh-snooze1").onclick=()=>{const id=editId;closeSheet();snooze(id,1)};
 $("#sh-snooze7").onclick=()=>{const id=editId;closeSheet();snooze(id,7)};
 $("#sh-del").onclick=()=>{
@@ -487,6 +563,10 @@ $("#sh-del").onclick=()=>{
   const id=editId,prev=structuredClone(tasks.get(id));closeSheet();removeTask(id);
   showToast(`"${prev.name}" נמחקה`,()=>writeTask(id,prev));
 };
+
+/* ---------- no zoom ---------- */
+["gesturestart","gesturechange","gestureend"].forEach(ev=>document.addEventListener(ev,e=>e.preventDefault(),{passive:false}));
+document.addEventListener("touchmove",e=>{if(e.touches.length>1)e.preventDefault()},{passive:false});
 
 /* ---------- boot ---------- */
 render();
