@@ -4,7 +4,15 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
 <meta name="theme-color" content="#2D6A57">
-<script src="seed.js"></script>
+<link rel="icon" href="/icon.svg" type="image/svg+xml">
+<link rel="icon" href="/icon-192.png" type="image/png" sizes="192x192">
+<link rel="apple-touch-icon" href="/apple-touch-icon.png">
+<link rel="manifest" href="/manifest.webmanifest">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-title" content="הבית שלנו">
+<meta name="apple-mobile-web-app-status-bar-style" content="default">
+<script src="/seed.js"></script>
 </head>
 <body>
 <title>הבית שלנו</title>
@@ -249,14 +257,53 @@ let tasks=new Map(), db=null, col=null, mode="loading";
 const LS="house-tasks-v1";
 function lsLoad(){try{return JSON.parse(localStorage.getItem(LS)||"{}")}catch(e){return{}}}
 function lsSave(){try{localStorage.setItem(LS,JSON.stringify(Object.fromEntries(tasks)))}catch(e){}}
+/* remote (Netlify) sync: every change goes to the server; changes that fail wait in a queue and are resent */
+const PEND="house-pending-v1",CACHE="house-cache-v1";
+let pending={};
+try{pending=JSON.parse(localStorage.getItem(PEND)||"{}")}catch(e){}
+function savePending(){try{localStorage.setItem(PEND,JSON.stringify(pending))}catch(e){}}
+async function api(method,id,body){
+  const r=await fetch("/api/tasks"+(id?"/"+encodeURIComponent(id):""),{method,cache:"no-store",
+    headers:body?{"content-type":"application/json"}:{},body:body?JSON.stringify(body):undefined});
+  if(!r.ok)throw new Error("HTTP "+r.status);
+  return r.json();
+}
+function setSync(ok){
+  const b=$("#banner");
+  if(ok){b.hidden=true}else{b.hidden=false;b.textContent="אין חיבור לשרת כרגע. השינויים נשמרו במכשיר ויישלחו כשהחיבור יחזור."}
+}
+let flushing=false;
+async function flush(){
+  if(flushing)return;flushing=true;
+  try{for(const id of Object.keys(pending)){const d=pending[id];
+    if(d===null)await api("DELETE",id);else await api("PUT",id,d);
+    if(pending[id]===d){delete pending[id];savePending()}}setSync(true)}
+  catch(e){setSync(false)}
+  finally{flushing=false}
+}
+let pulling=false;
+async function pull(){
+  if(pulling||mode!=="remote")return;pulling=true;
+  try{await flush();const {tasks:t}=await api("GET");
+    const m=new Map(Object.entries(t||{}));
+    for(const[id,d]of Object.entries(pending)){if(d===null)m.delete(id);else m.set(id,d)}
+    tasks=m;try{localStorage.setItem(CACHE,JSON.stringify(t||{}))}catch(e){}
+    if(!Object.keys(pending).length)setSync(true);render();
+  }catch(e){setSync(false)}
+  finally{pulling=false}
+}
+async function remoteWrite(id,data){pending[id]=data;savePending();await flush()}
+
 async function writeTask(id,data){
   tasks.set(id,data);render();
   if(mode==="db"){try{await col.doc(id).set(data)}catch(e){showToast("השמירה נכשלה, נסו שוב",false)}}
+  else if(mode==="remote")remoteWrite(id,data);
   else lsSave();
 }
 async function removeTask(id){
   tasks.delete(id);render();
   if(mode==="db"){try{await col.doc(id).delete()}catch(e){showToast("המחיקה נכשלה",false)}}
+  else if(mode==="remote")remoteWrite(id,null);
   else lsSave();
 }
 function newId(){return"t"+Date.now().toString(36)+Math.random().toString(36).slice(2,6)}
@@ -443,7 +490,29 @@ $("#sh-del").onclick=()=>{
 
 /* ---------- boot ---------- */
 render();
+async function startRemote(){
+  /* returns true when this site has the sync server (Netlify) */
+  if(!/^https?:$/.test(location.protocol))return false;
+  let cached=null;try{cached=JSON.parse(localStorage.getItem(CACHE)||"null")}catch(e){}
+  try{
+    const r=await fetch("/api/tasks",{cache:"no-store"});
+    if(r.status===404)return false;
+    if(!r.ok)throw new Error();
+    mode="remote";tasks=new Map(Object.entries((await r.json()).tasks||{}));
+    try{localStorage.setItem(CACHE,JSON.stringify(Object.fromEntries(tasks)))}catch(e){}
+    await pull();
+  }catch(e){
+    if(!cached)return false;
+    mode="remote";tasks=new Map(Object.entries(cached));setSync(false);
+  }
+  render();
+  setInterval(()=>{if(document.visibilityState==="visible")pull()},15000);
+  document.addEventListener("visibilitychange",()=>{if(document.visibilityState==="visible")pull()});
+  window.addEventListener("online",pull);window.addEventListener("focus",pull);
+  return true;
+}
 (async()=>{
+  if(!window.claude&&await startRemote())return;
   try{db=window.claude?.use?await window.claude.use("db"):null}catch(e){db=null}
   if(db){
     col=db.collection("tasks");mode="db";
