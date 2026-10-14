@@ -4,6 +4,7 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
 <meta name="theme-color" content="#2D6A57">
+<script src="seed.js"></script>
 </head>
 <body>
 <title>הבית שלנו</title>
@@ -449,8 +450,13 @@ render();
     col.onSnapshot(snap=>{tasks=new Map(snap.docs.map(d=>[d.id,d.data()]));render()},
       ()=>{$("#banner").hidden=false;$("#banner").textContent="אין חיבור לשמירה כרגע. השינויים יישמרו כשהחיבור יחזור."});
   }else{
-    mode="local";tasks=new Map(Object.entries(lsLoad()));
-    $("#banner").hidden=false;$("#banner").textContent="מצב מקומי: הנתונים נשמרים רק בדפדפן הזה. היכנסו לחשבון כדי לסנכרן בין מכשירים.";
+    mode="local";let saved=lsLoad(),seeded=null;
+    try{seeded=localStorage.getItem("house-seeded")}catch(e){}
+    if(!Object.keys(saved).length&&!seeded&&window.HOUSE_SEED){
+      saved=structuredClone(window.HOUSE_SEED);tasks=new Map(Object.entries(saved));lsSave();
+      try{localStorage.setItem("house-seeded","1")}catch(e){}
+    }else tasks=new Map(Object.entries(saved));
+    $("#banner").hidden=false;$("#banner").textContent="הנתונים נשמרים בדפדפן הזה בלבד, ולא מסתנכרנים בין מכשירים.";
     render();
   }
 })();
