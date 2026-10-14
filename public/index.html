@@ -20,9 +20,9 @@
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Assistant:wght@400;500;600;700;800&family=Secular+One&display=swap">
 <style>
-/* Layout: one-column phone app — summary dial up top, tasks grouped by urgency or by room, bottom sheet for editing */
+/* Layout: one quiet column — counts line, tasks grouped by the original categories (or by room), flat rows with hairlines, bottom sheet for editing */
 :root{
-  --bg:#F2F4F1; --surface:#FFFFFF; --sunk:#E7EBE6; --line:#DCE2DB;
+  --bg:#FBFCFB; --surface:#FFFFFF; --sunk:#F0F3F1; --line:#E4E9E6;
   --ink:#18221E; --muted:#5F6D66; --accent:#2D6A57; --accent-ink:#FFFFFF; --accent-soft:#DCEBE4;
   --late:#B9412A; --late-soft:#F6E0DA; --soon:#B97A12; --soon-soft:#F6EAD2; --ok:#3B8556; --ok-soft:#DDEFE2;
   --shadow:0 1px 2px rgba(24,34,30,.06),0 6px 24px rgba(24,34,30,.08);
@@ -30,12 +30,12 @@
   --f-body:"Assistant",system-ui,-apple-system,"Segoe UI",Arial,sans-serif;
 }
 @media (prefers-color-scheme:dark){:root:not([data-theme="light"]){
-  --bg:#111715; --surface:#1A2320; --sunk:#222D29; --line:#2C3833;
+  --bg:#121715; --surface:#171E1B; --sunk:#1E2723; --line:#28322E;
   --ink:#E8EEEA; --muted:#97A69F; --accent:#6FC1A3; --accent-ink:#0E1A16; --accent-soft:#1F3A31;
   --late:#F08A72; --late-soft:#3A221C; --soon:#E8B55A; --soon-soft:#3A2E17; --ok:#7CCB94; --ok-soft:#1C3324;
   --shadow:0 1px 2px rgba(0,0,0,.3),0 6px 24px rgba(0,0,0,.35); color-scheme:dark}}
 :root[data-theme="dark"]{
-  --bg:#111715; --surface:#1A2320; --sunk:#222D29; --line:#2C3833;
+  --bg:#121715; --surface:#171E1B; --sunk:#1E2723; --line:#28322E;
   --ink:#E8EEEA; --muted:#97A69F; --accent:#6FC1A3; --accent-ink:#0E1A16; --accent-soft:#1F3A31;
   --late:#F08A72; --late-soft:#3A221C; --soon:#E8B55A; --soon-soft:#3A2E17; --ok:#7CCB94; --ok-soft:#1C3324;
   --shadow:0 1px 2px rgba(0,0,0,.3),0 6px 24px rgba(0,0,0,.35); color-scheme:dark}
@@ -48,76 +48,67 @@ button{font:inherit;color:inherit;cursor:pointer}
 button:focus-visible,input:focus-visible,select:focus-visible,textarea:focus-visible{outline:2px solid var(--accent);outline-offset:2px}
 
 header.top{display:flex;justify-content:space-between;align-items:flex-start;gap:12px}
-h1{font-family:var(--f-display);font-weight:400;font-size:30px;line-height:1.1;margin:0;text-wrap:balance}
+h1{font-family:var(--f-display);font-weight:400;font-size:26px;line-height:1.1;margin:0;text-wrap:balance}
 .date{color:var(--muted);font-size:14px;margin-top:4px}
 .date b{color:var(--ink);font-weight:600}
 
-.summary{margin-top:18px;background:var(--surface);border-radius:20px;box-shadow:var(--shadow);padding:16px;display:grid;grid-template-columns:auto 1fr;gap:16px;align-items:center}
-.dial{width:88px;height:88px;position:relative}
-.dial svg{width:100%;height:100%;transform:rotate(-90deg)}
-.dial .num{position:absolute;inset:0;display:grid;place-items:center;text-align:center;line-height:1}
-.dial .num b{font-family:var(--f-display);font-weight:400;font-size:26px;display:block}
-.dial .num small{font-size:11px;color:var(--muted);display:block;margin-top:3px}
-.stats{display:grid;grid-template-columns:repeat(3,1fr);gap:8px;min-width:0}
-.stat{border-radius:14px;padding:8px 10px;background:var(--sunk);border:0;text-align:right}
-.stat b{display:block;font-family:var(--f-display);font-weight:400;font-size:22px;font-variant-numeric:tabular-nums;line-height:1.1}
-.stat span{font-size:12.5px;color:var(--muted)}
+.summary{margin-top:18px;display:flex;gap:8px}
+.stat{flex:1;display:flex;align-items:baseline;gap:6px;background:transparent;border:1px solid var(--line);border-radius:12px;padding:9px 12px;text-align:right;color:var(--muted);font-size:14px}
+.stat b{font-family:var(--f-display);font-weight:400;font-size:20px;font-variant-numeric:tabular-nums;line-height:1}
 .stat.late b{color:var(--late)} .stat.today b{color:var(--soon)} .stat.ok b{color:var(--ok)}
-.stat[aria-pressed="true"]{outline:2px solid currentColor;outline-offset:-2px}
+.stat[aria-pressed="true"]{border-color:currentColor;color:var(--ink);background:var(--sunk)}
 
 .tools{margin-top:16px;display:flex;flex-direction:column;gap:10px}
-.search{display:flex;align-items:center;gap:8px;background:var(--surface);border:1px solid var(--line);border-radius:14px;padding:0 12px}
+.search{display:flex;align-items:center;gap:8px;background:var(--sunk);border:0;border-radius:12px;padding:0 12px}
 .search input{flex:1;min-width:0;border:0;background:transparent;font:inherit;color:var(--ink);padding:11px 0}
 .search input:focus{outline:none}
 .search svg{flex:none;color:var(--muted)}
-.seg{display:flex;background:var(--sunk);border-radius:12px;padding:3px}
-.seg button{flex:1;border:0;background:transparent;padding:8px 6px;border-radius:9px;font-weight:600;font-size:14.5px;color:var(--muted)}
-.seg button[aria-pressed="true"]{background:var(--surface);color:var(--ink);box-shadow:0 1px 3px rgba(0,0,0,.12)}
+.seg{display:flex;gap:18px;border-bottom:1px solid var(--line)}
+.seg button{border:0;background:transparent;padding:8px 0 10px;font-weight:600;font-size:15px;color:var(--muted);border-bottom:2px solid transparent;margin-bottom:-1px}
+.seg button[aria-pressed="true"]{color:var(--ink);border-bottom-color:var(--ink)}
 .chips{display:flex;gap:6px;overflow-x:auto;scrollbar-width:none;padding-bottom:2px}
 .chips::-webkit-scrollbar{display:none}
-.chip{flex:none;border:1px solid var(--line);background:var(--surface);border-radius:999px;padding:6px 12px;font-size:14px;font-weight:600;color:var(--muted)}
-.chip[aria-pressed="true"]{background:var(--accent);border-color:var(--accent);color:var(--accent-ink)}
+.chip{flex:none;border:1px solid var(--line);background:transparent;border-radius:999px;padding:6px 12px;font-size:14px;font-weight:600;color:var(--muted)}
+.chip[aria-pressed="true"]{background:var(--ink);border-color:var(--ink);color:var(--bg)}
 
-.group{margin-top:22px}
-.group h2{font-size:15px;font-weight:700;margin:0 4px 8px;display:flex;align-items:center;gap:8px;letter-spacing:.01em}
+.group{margin-top:26px}
+.group h2{font-size:14px;font-weight:700;color:var(--muted);margin:0 0 4px;display:flex;align-items:center;gap:8px;letter-spacing:.01em}
 .group h2 .dot{width:8px;height:8px;border-radius:50%;background:var(--muted)}
 .group h2 .cnt{color:var(--muted);font-weight:500}
 .group.late h2 .dot,.group.cat-high h2 .dot{background:var(--late)} .group.cat-mid h2 .dot{background:var(--soon)} .group.cat-low h2 .dot{background:var(--ok)}
-.group.cat-high h2,.group.cat-mid h2,.group.cat-low h2,.group.cat-none h2{font-size:17px}
+.group.cat-high h2,.group.cat-mid h2,.group.cat-low h2,.group.cat-none h2{font-size:15px;color:var(--ink)}
 .group.zz h2 .dot{background:var(--late)} .group.today h2 .dot{background:var(--soon)} .group.week h2 .dot{background:var(--ok)}
-.list{background:var(--surface);border-radius:18px;box-shadow:var(--shadow);overflow:hidden}
-.task{display:grid;grid-template-columns:auto 1fr auto;gap:12px;align-items:center;padding:12px 14px;border-top:1px solid var(--line)}
-.task:first-child{border-top:0}
-.check{width:34px;height:34px;border-radius:50%;border:2px solid var(--line);background:transparent;display:grid;place-items:center;transition:background .15s,border-color .15s}
+.list{border-top:1px solid var(--line)}
+.task{display:grid;grid-template-columns:auto 1fr auto;gap:12px;align-items:center;padding:12px 0;border-bottom:1px solid var(--line)}
+
+.check{width:28px;height:28px;border-radius:50%;border:1.5px solid var(--muted);opacity:.7;background:transparent;display:grid;place-items:center;transition:background .15s,border-color .15s}
 .check svg{opacity:0;transition:opacity .15s}
 .check:hover{border-color:var(--accent)}
 .check:hover svg{opacity:.5}
-.task.done .check{background:var(--accent);border-color:var(--accent);color:var(--accent-ink)}
+.task.done .check{background:var(--accent);border-color:var(--accent);color:var(--accent-ink);opacity:1}
+.task.done .name{color:var(--muted)}
 .task.done .check svg{opacity:1}
 .body{min-width:0;border:0;background:none;text-align:right;padding:0}
-.name{font-weight:700;font-size:16.5px;overflow-wrap:anywhere}
+.name{font-weight:600;font-size:16.5px;overflow-wrap:anywhere}
 .meta{font-size:13px;color:var(--muted);display:flex;gap:6px;flex-wrap:wrap;margin-top:1px}
 .meta .sep{opacity:.5}
-.bar{height:4px;border-radius:4px;background:var(--sunk);margin-top:7px;overflow:hidden}
-.bar i{display:block;height:100%;border-radius:4px;background:var(--ok)}
-.task.s-late .bar i{background:var(--late)} .task.s-today .bar i{background:var(--soon)}
-.pill{font-size:13px;font-weight:700;border-radius:999px;padding:4px 10px;white-space:nowrap;font-variant-numeric:tabular-nums;background:var(--ok-soft);color:var(--ok)}
-.task.s-late .pill{background:var(--late-soft);color:var(--late)}
-.task.s-today .pill{background:var(--soon-soft);color:var(--soon)}
-.task.s-none .pill{background:var(--sunk);color:var(--muted)}
+.pill{font-size:13.5px;font-weight:600;white-space:nowrap;font-variant-numeric:tabular-nums;color:var(--muted)}
+.task.s-late .pill{color:var(--late)}
+.task.s-today .pill{color:var(--soon)}
+
 .prio{display:inline-block;width:7px;height:7px;border-radius:2px;margin-left:2px;vertical-align:middle}
 .prio.high{background:var(--late)} .prio.mid{background:var(--soon)} .prio.low{background:var(--muted)} .prio.none{background:var(--line)}
 
-.empty{background:var(--surface);border-radius:18px;padding:28px 20px;text-align:center;color:var(--muted);box-shadow:var(--shadow);margin-top:22px}
+.empty{padding:40px 20px;text-align:center;color:var(--muted);margin-top:10px}
 .empty b{display:block;color:var(--ink);font-size:17px;margin-bottom:4px}
 
-.hist{background:var(--surface);border-radius:18px;box-shadow:var(--shadow);padding:6px 14px}
-.hrow{display:flex;justify-content:space-between;gap:10px;padding:10px 0;border-top:1px solid var(--line);font-size:15px}
-.hrow:first-child{border-top:0}
+.hist{border-top:1px solid var(--line)}
+.hrow{display:flex;justify-content:space-between;gap:10px;padding:10px 0;border-bottom:1px solid var(--line);font-size:15px}
+
 .hrow span{color:var(--muted);font-variant-numeric:tabular-nums;white-space:nowrap}
 .dayhead{font-size:13px;color:var(--muted);font-weight:700;margin:16px 4px 6px}
 
-.fab{position:fixed;bottom:calc(20px + env(safe-area-inset-bottom,0px));left:calc(20px + env(safe-area-inset-left,0px));border:0;background:var(--accent);color:var(--accent-ink);border-radius:18px;padding:14px 20px;font-weight:700;font-size:16px;display:flex;gap:8px;align-items:center;box-shadow:0 8px 24px rgba(0,0,0,.2)}
+.fab{position:fixed;bottom:calc(22px + env(safe-area-inset-bottom,0px));left:calc(20px + env(safe-area-inset-left,0px));border:0;background:var(--ink);color:var(--bg);border-radius:50%;width:56px;height:56px;display:grid;place-items:center;box-shadow:0 6px 18px rgba(0,0,0,.18)}
 
 .scrim{position:fixed;inset:0;background:rgba(10,16,13,.45);opacity:0;pointer-events:none;transition:opacity .2s;z-index:10}
 .scrim.on{opacity:1;pointer-events:auto}
@@ -127,10 +118,11 @@ h1{font-family:var(--f-display);font-weight:400;font-size:30px;line-height:1.1;m
 .sheet-in{max-width:600px;margin:0 auto}
 .grab{width:40px;height:5px;border-radius:3px;background:var(--line);margin:0 auto 12px}
 .sheet h3{font-family:var(--f-display);font-weight:400;font-size:24px;margin:0 0 4px}
-.sheet .sub{color:var(--muted);font-size:14px;margin-bottom:14px}
+.sheet .sub{color:var(--muted);font-size:13.5px;margin-bottom:12px;min-height:1.4em}
+.sheet .sub.saved{color:var(--ok)}
 .quick{display:grid;grid-template-columns:repeat(3,1fr);gap:8px;margin-bottom:16px}
 .quick .wide{grid-column:1/-1}
-.datebtn{width:100%;border:1px solid var(--line);background:var(--sunk);color:var(--ink);border-radius:12px;padding:11px 12px;text-align:right;font-variant-numeric:tabular-nums;display:flex;align-items:center;gap:8px;min-height:46px}
+.datebtn{width:100%;border:0;background:var(--sunk);color:var(--ink);border-radius:12px;padding:11px 12px;text-align:right;font-variant-numeric:tabular-nums;display:flex;align-items:center;gap:8px;min-height:46px}
 .datebtn::before{content:"";width:18px;height:18px;flex:none;background:currentColor;opacity:.55;-webkit-mask:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='black' stroke-width='2'%3E%3Crect x='3' y='5' width='18' height='16' rx='3'/%3E%3Cpath d='M3 10h18M8 3v4M16 3v4'/%3E%3C/svg%3E") center/contain no-repeat;mask:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='black' stroke-width='2'%3E%3Crect x='3' y='5' width='18' height='16' rx='3'/%3E%3Cpath d='M3 10h18M8 3v4M16 3v4'/%3E%3C/svg%3E") center/contain no-repeat}
 .datebtn.empty{color:var(--muted)}
 .pick-scrim{position:fixed;inset:0;z-index:30;background:rgba(10,16,13,.35);opacity:0;pointer-events:none;transition:opacity .15s}
@@ -148,23 +140,23 @@ h1{font-family:var(--f-display);font-weight:400;font-size:30px;line-height:1.1;m
 .pk-grid button.today{box-shadow:inset 0 0 0 2px var(--accent);color:var(--accent);font-weight:800}
 .pk-grid button.sel{background:var(--accent);color:var(--accent-ink);font-weight:800;box-shadow:none}
 .pk-foot{display:grid;grid-template-columns:repeat(3,1fr);gap:8px;margin-top:10px}
-.btn{border:1px solid var(--line);background:var(--surface);border-radius:12px;padding:11px 10px;font-weight:700;font-size:15px}
+.btn{border:1px solid var(--line);background:transparent;border-radius:12px;padding:11px 10px;font-weight:700;font-size:15px}
 .btn.primary{background:var(--accent);border-color:var(--accent);color:var(--accent-ink)}
 .btn.danger{color:var(--late);border-color:var(--late-soft)}
 .btn.danger.arm{background:var(--late);color:#fff;border-color:var(--late)}
 .field{margin-bottom:14px}
 .field label,.field .lab{display:block;font-weight:700;font-size:14px;margin-bottom:6px}
-.field input,.field select,.field textarea{width:100%;border:1px solid var(--line);background:var(--sunk);color:var(--ink);border-radius:12px;padding:11px 12px;font:inherit}
+.field input,.field select,.field textarea{width:100%;border:0;background:var(--sunk);color:var(--ink);border-radius:12px;padding:11px 12px;font:inherit}
 .field textarea{min-height:64px;resize:vertical}
-.row2{display:grid;grid-template-columns:1fr 1fr;gap:10px}
+.row2{display:grid;grid-template-columns:1fr 1fr;gap:10px;align-items:end}
 .opts{display:flex;flex-wrap:wrap;gap:6px}
-.opts button{border:1px solid var(--line);background:var(--surface);border-radius:999px;padding:7px 13px;font-weight:600;font-size:14.5px;font-variant-numeric:tabular-nums}
-.opts button[aria-pressed="true"]{background:var(--accent-soft);border-color:var(--accent);color:var(--accent)}
+.opts button{border:1px solid var(--line);background:transparent;border-radius:999px;padding:7px 13px;font-weight:600;font-size:14.5px;font-variant-numeric:tabular-nums}
+.opts button[aria-pressed="true"]{background:var(--ink);border-color:var(--ink);color:var(--bg)}
 .opts input{width:84px;padding:7px 10px;border-radius:999px}
-.preview{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin:4px 0 16px}
-.preview div{border:1px solid var(--line);border-radius:14px;padding:10px 12px}
+.preview{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin:2px 0 16px}
+.preview div{background:var(--sunk);border-radius:14px;padding:10px 14px}
 .preview span{font-size:13px;color:var(--muted);display:block}
-.preview b{font-family:var(--f-display);font-weight:400;font-size:20px;font-variant-numeric:tabular-nums}
+.preview b{font-family:var(--f-display);font-weight:400;font-size:24px;font-variant-numeric:tabular-nums;display:inline-block}
 .foot{display:grid;grid-template-columns:2fr 1fr;gap:8px;margin-top:6px}
 .hint{font-size:12.5px;color:var(--muted);margin-top:4px}
 .histmini{font-size:14px;color:var(--muted);font-variant-numeric:tabular-nums}
@@ -185,12 +177,9 @@ h1{font-family:var(--f-display);font-weight:400;font-size:30px;line-height:1.1;m
   </header>
 
   <section class="summary" aria-label="סיכום">
-    <div class="dial" id="dial"></div>
-    <div class="stats">
-      <button class="stat late" id="st-late" data-f="late"><b>–</b><span>באיחור</span></button>
-      <button class="stat today" id="st-today" data-f="today"><b>–</b><span>להיום</span></button>
-      <button class="stat ok" id="st-week" data-f="week"><b>–</b><span>השבוע</span></button>
-    </div>
+    <button class="stat late" id="st-late" data-f="late"><b>–</b>באיחור</button>
+    <button class="stat today" id="st-today" data-f="today"><b>–</b>להיום</button>
+    <button class="stat ok" id="st-week" data-f="week"><b>–</b>השבוע</button>
   </section>
   <div class="banner" id="banner" hidden></div>
 
@@ -201,7 +190,6 @@ h1{font-family:var(--f-display);font-weight:400;font-size:30px;line-height:1.1;m
     </div>
     <div class="seg" id="views">
       <button data-v="category" aria-pressed="true">קטגוריות</button>
-      <button data-v="urgency" aria-pressed="false">דחיפות</button>
       <button data-v="room" aria-pressed="false">חדרים</button>
       <button data-v="history" aria-pressed="false">מה עשינו</button>
     </div>
@@ -211,7 +199,7 @@ h1{font-family:var(--f-display);font-weight:400;font-size:30px;line-height:1.1;m
   <main id="main"></main>
 </div>
 
-<button class="fab" id="add"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M12 5v14M5 12h14"/></svg>משימה חדשה</button>
+<button class="fab" id="add" aria-label="משימה חדשה"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"><path d="M12 5v14M5 12h14"/></svg></button>
 
 <div class="scrim" id="scrim"></div>
 <div class="sheet" id="sheet" role="dialog" aria-modal="true" aria-labelledby="sh-title">
@@ -219,9 +207,10 @@ h1{font-family:var(--f-display);font-weight:400;font-size:30px;line-height:1.1;m
     <div class="grab"></div>
     <h3 id="sh-title"></h3>
     <div class="sub" id="sh-sub"></div>
+    <div class="preview"><div><span>הפעם הבאה</span><b id="pv-next">—</b></div><div><span>ימים שנותרו</span><b id="pv-rem" dir="ltr">—</b></div></div>
     <div class="quick" id="sh-quick">
       <button class="btn primary wide" id="sh-done">✓ בוצע היום</button>
-      <button class="btn" id="sh-doneon">בוצע בתאריך…</button>
+      <button class="btn" id="sh-doneon">בתאריך אחר</button>
       <button class="btn" id="sh-snooze1">דחה ליום</button>
       <button class="btn" id="sh-snooze7">דחה לשבוע</button>
     </div>
@@ -235,9 +224,8 @@ h1{font-family:var(--f-display);font-weight:400;font-size:30px;line-height:1.1;m
     </div>
     <div class="row2">
       <div class="field"><span class="lab">פעם אחרונה</span><button type="button" class="datebtn" id="f-last" data-value=""></button></div>
-      <div class="field"><span class="lab">פעם הבאה ידני</span><button type="button" class="datebtn" id="f-next" data-value=""></button><div class="hint">גובר על החישוב</div></div>
+      <div class="field"><span class="lab">פעם הבאה ידני</span><button type="button" class="datebtn" id="f-next" data-value=""></button></div>
     </div>
-    <div class="preview"><div><span>הפעם הבאה</span><b id="pv-next">—</b></div><div><span>ימים שנותרו</span><b id="pv-rem">—</b></div></div>
     <div class="field"><label for="f-notes">הערות</label><textarea id="f-notes" placeholder="חומר ניקוי, טיפים..."></textarea></div>
     <div class="field" id="sh-histwrap"><span class="lab">היסטוריה</span><div class="histmini" id="sh-hist"></div></div>
     <div class="foot">
@@ -351,7 +339,7 @@ function newId(){return"t"+Date.now().toString(36)+Math.random().toString(36).sl
 
 /* ---------- UI state ---------- */
 let view="category", room="הכל", quick=null, query="";
-try{const s=JSON.parse(localStorage.getItem("house-ui2")||"{}");if(s.view)view=s.view;if(s.room)room=s.room}catch(e){}
+try{const s=JSON.parse(localStorage.getItem("house-ui2")||"{}");if(s.view&&s.view!=="urgency")view=s.view;if(s.room)room=s.room}catch(e){}
 function saveUI(){try{localStorage.setItem("house-ui2",JSON.stringify({view,room}))}catch(e){}}
 
 function hebDate(){
@@ -378,12 +366,8 @@ function sortTasks(a){return a.sort((x,y)=>{
 function renderSummary(){
   const all=[...tasks.values()].map(remOf);
   const late=all.filter(r=>r!=null&&r<0).length, today=all.filter(r=>r===0).length, week=all.filter(r=>r!=null&&r>=0&&r<=7).length;
-  const sched=all.filter(r=>r!=null).length;
-  const pct=sched?Math.round((sched-late)/sched*100):100;
   $("#st-late b").textContent=late;$("#st-today b").textContent=today;$("#st-week b").textContent=week;
   document.querySelectorAll(".stat").forEach(b=>b.setAttribute("aria-pressed",quick===b.dataset.f?"true":"false"));
-  const R=38,C=2*Math.PI*R,col=pct>=75?"var(--ok)":pct>=45?"var(--soon)":"var(--late)";
-  $("#dial").innerHTML=`<svg viewBox="0 0 88 88"><circle cx="44" cy="44" r="${R}" fill="none" stroke="var(--sunk)" stroke-width="8"/><circle cx="44" cy="44" r="${R}" fill="none" stroke="${col}" stroke-width="8" stroke-linecap="round" stroke-dasharray="${C*pct/100} ${C}"/></svg><div class="num"><div><b>${pct}%</b><small>בזמן</small></div></div>`;
 }
 
 function renderChips(){
@@ -396,14 +380,12 @@ function renderChips(){
 const esc=s=>String(s??"").replace(/[&<>"]/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;"})[c]);
 function taskRow(t,showRoom=true,showPrio=true){
   const s=statusOf(t.rem);
-  const elapsed=t.last&&t.interval?Math.min(1,Math.max(0,diff(TODAY,t.last)/((nextOf(t)?diff(nextOf(t),t.last):t.interval)||1))):0;
   const doneToday=t.last===TODAY;
   return `<div class="task s-${doneToday?"week":s}${doneToday?" done":""}" data-id="${t.id}">
     <button class="check" data-done="${t.id}" aria-label="סמן כבוצע: ${esc(t.name)}"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3"><path d="m5 12 5 5 9-10"/></svg></button>
     <button class="body" data-open="${t.id}">
       <div class="name">${esc(t.name)}</div>
-      <div class="meta">${showPrio?`<span><i class="prio ${t.priority||"none"}"></i> ${PRIO[t.priority]||PRIO.none}</span><span class="sep">·</span>`:""}${showRoom?`<span>${esc(t.room)}</span><span class="sep">·</span>`:""}<span>${intLabel(t.interval)}</span>${t.last?`<span class="sep">·</span><span>אחרון ${fmtShort(t.last)}</span>`:""}</div>
-      <div class="bar"><i style="width:${(doneToday?0:elapsed)*100}%"></i></div>
+      <div class="meta">${showPrio?`<span><i class="prio ${t.priority||"none"}"></i> ${PRIO[t.priority]||PRIO.none}</span><span class="sep">·</span>`:""}${showRoom?`<span>${esc(t.room)}</span><span class="sep">·</span>`:""}<span>${intLabel(t.interval)}</span></div>
     </button>
     <span class="pill">${doneToday?"בוצע היום":remLabel(t.rem)}</span>
   </div>`;
@@ -420,7 +402,7 @@ function render(){
   renderSummary();renderChips();
   const main=$("#main");
   if(mode==="loading"){main.innerHTML=`<div class="empty"><b>טוען את המשימות…</b></div>`;return}
-  if(!tasks.size){main.innerHTML=`<div class="empty"><b>עוד אין משימות</b>לחצו על "משימה חדשה" כדי להוסיף את הראשונה.</div>`;return}
+  if(!tasks.size){main.innerHTML=`<div class="empty"><b>עוד אין משימות</b>לחצו על + כדי להוסיף את הראשונה.</div>`;return}
 
   if(view==="history"){
     const ev=[];tasks.forEach((t,id)=>(t.history||[]).forEach(d=>ev.push({d,name:t.name,room:t.room})));
@@ -467,7 +449,7 @@ function markDone(id,date=TODAY){
   const t=tasks.get(id);if(!t)return;const prev=structuredClone(t);
   const hist=[date,...(t.history||[]).filter(d=>d!==date)].sort().reverse().slice(0,40);
   writeTask(id,{...t,last:date,manualNext:null,history:hist});
-  showToast(`"${t.name}" סומן כבוצע · הבא ב־${fmt(add(date,t.interval))}`,()=>writeTask(id,prev));
+  showToast(`נשמר ✓ "${t.name}" בוצע · הבא ב־${fmt(add(date,t.interval))}`,()=>writeTask(id,prev));
 }
 function snooze(id,n){
   const t=tasks.get(id);if(!t)return;const prev=structuredClone(t);
@@ -492,19 +474,34 @@ function renderInts(){
   $("#f-int").innerHTML=INTS.map(n=>`<button type="button" data-int="${n}" aria-pressed="${n===editInt}">${n<28||n===56||n===90?({3:"3 ימים",7:"שבוע",14:"שבועיים",21:"3 שבועות",56:"חודשיים",90:"3 חודשים"})[n]:"חודש"}</button>`).join("")+
    `<input id="f-custom" type="number" min="1" max="730" inputmode="numeric" placeholder="ימים" value="${custom?editInt:""}" aria-label="מספר ימים אחר">`;
 }
-$("#f-int").addEventListener("click",e=>{const b=e.target.closest("[data-int]");if(b){editInt=+b.dataset.int;renderInts();updatePreview()}});
-$("#f-int").addEventListener("input",e=>{if(e.target.id==="f-custom"){const n=parseInt(e.target.value);if(n>0){editInt=n;document.querySelectorAll("#f-int button").forEach(b=>b.setAttribute("aria-pressed",+b.dataset.int===n))}updatePreview()}});
+$("#f-int").addEventListener("click",e=>{const b=e.target.closest("[data-int]");if(b){editInt=+b.dataset.int;renderInts();updatePreview();autosave()}});
+$("#f-int").addEventListener("input",e=>{if(e.target.id==="f-custom"){const n=parseInt(e.target.value);if(n>0){editInt=n;document.querySelectorAll("#f-int button").forEach(b=>b.setAttribute("aria-pressed",+b.dataset.int===n))}updatePreview();autosave()}});
 function setDateBtn(el,v,emptyText){el.dataset.value=v||"";el.textContent=v?fmt(v):emptyText;el.classList.toggle("empty",!v)}
-$("#f-last").onclick=()=>openPicker({value:$("#f-last").dataset.value,maxToday:true,onPick:v=>{setDateBtn($("#f-last"),v,"לא בוצע עדיין");updatePreview()}});
-$("#f-next").onclick=()=>openPicker({value:$("#f-next").dataset.value,onPick:v=>{setDateBtn($("#f-next"),v,"לפי התדירות");updatePreview()}});
+$("#f-last").onclick=()=>openPicker({value:$("#f-last").dataset.value,maxToday:true,onPick:v=>{setDateBtn($("#f-last"),v,"לא בוצע עדיין");updatePreview();autosave()}});
+$("#f-next").onclick=()=>openPicker({value:$("#f-next").dataset.value,onPick:v=>{setDateBtn($("#f-next"),v,"לפי התדירות");updatePreview();autosave()}});
+/* existing tasks save themselves; only a new task needs the add button */
+let asTimer=null;
+function autosave(){if(!editId)return;clearTimeout(asTimer);asTimer=setTimeout(saveEdit,450)}
+function saveEdit(){
+  clearTimeout(asTimer);asTimer=null;if(!editId)return;
+  const prev=tasks.get(editId);if(!prev)return;const d=draft();if(!d.name)return;
+  let history=[...(prev.history||[])];if(d.last&&!history.includes(d.last))history=[d.last,...history].sort().reverse().slice(0,40);
+  const next={...prev,...d,history};
+  if(JSON.stringify(next)===JSON.stringify(prev))return;
+  writeTask(editId,next);$("#sh-title").textContent=d.name;
+  const sub=$("#sh-sub");sub.textContent="נשמר ✓";sub.classList.add("saved");
+}
+["#f-name","#f-notes"].forEach(q=>$(q).addEventListener("input",autosave));
+["#f-room","#f-prio"].forEach(q=>$(q).addEventListener("change",autosave));
 function draft(){return{name:$("#f-name").value.trim(),room:$("#f-room").value,priority:$("#f-prio").value,interval:editInt,last:$("#f-last").dataset.value||null,manualNext:$("#f-next").dataset.value||null,notes:$("#f-notes").value.trim()}}
-function updatePreview(){const d=draft(),n=nextOf(d),r=remOf(d);$("#pv-next").textContent=n?fmt(n):"—";$("#pv-rem").textContent=r==null?"—":r;$("#pv-rem").style.color=r!=null&&r<0?"var(--late)":""}
+function updatePreview(){const d=draft(),n=nextOf(d),r=remOf(d);$("#pv-next").textContent=n?fmt(n):"—";$("#pv-rem").textContent=r==null?"—":(r<0?"−"+(-r):r);$("#pv-rem").style.color=r!=null&&r<0?"var(--late)":""}
 
 function openSheet(id){
   editId=id;delArmed=false;$("#sh-del").classList.remove("arm");$("#sh-del").textContent="מחק";
   const t=id?tasks.get(id):{name:"",room:room!=="הכל"?room:"כללי",priority:"mid",interval:7,last:TODAY,manualNext:null,notes:"",history:[]};
   $("#sh-title").textContent=id?t.name:"משימה חדשה";
-  $("#sh-sub").textContent=id?`${remLabel(remOf(t))} · ${intLabel(t.interval)}`:"מלאו שם, תדירות ומתי בוצעה לאחרונה.";
+  $("#sh-sub").textContent=id?"שינויים נשמרים אוטומטית":"מלאו שם, תדירות ומתי בוצעה לאחרונה.";$("#sh-sub").classList.remove("saved");
+  $("#sh-save").textContent=id?"סגירה":"הוספת משימה";$("#sh-save").className=id?"btn":"btn primary";
   $("#sh-quick").hidden=!id;$("#sh-del").hidden=!id;$("#sh-histwrap").hidden=!id||!(t.history||[]).length;
   $("#f-name").value=t.name;$("#f-room").value=t.room;$("#f-prio").value=t.priority;editInt=t.interval||7;renderInts();
   setDateBtn($("#f-last"),t.last,"לא בוצע עדיין");setDateBtn($("#f-next"),t.manualNext,"לפי התדירות");$("#f-notes").value=t.notes||"";
@@ -515,11 +512,12 @@ function openSheet(id){
   $("#scrim").classList.add("on");$("#sheet").classList.add("on");$("#sheet").scrollTop=0;
   if(!id)setTimeout(()=>$("#f-name").focus(),250);
 }
-function closeSheet(){$("#scrim").classList.remove("on");$("#sheet").classList.remove("on");editId=null}
+function closeSheet(){if(asTimer)saveEdit();$("#scrim").classList.remove("on");$("#sheet").classList.remove("on");editId=null}
 $("#scrim").onclick=closeSheet;
 document.addEventListener("keydown",e=>{if(e.key==="Escape"){if(pk)closePicker();else closeSheet()}});
 $("#add").onclick=()=>openSheet(null);
 $("#sh-save").onclick=()=>{
+  if(editId){closeSheet();return}
   const d=draft();if(!d.name){$("#f-name").focus();$("#f-name").placeholder="צריך שם למשימה";return}
   const prev=editId?tasks.get(editId):null;
   const id=editId||newId();
@@ -527,8 +525,8 @@ $("#sh-save").onclick=()=>{
   writeTask(id,{...d,history,created:prev?.created||TODAY});closeSheet();
   showToast(prev?"השינויים נשמרו":"המשימה נוספה",false);
 };
-$("#sh-done").onclick=()=>{const id=editId;closeSheet();markDone(id)};
-$("#sh-doneon").onclick=()=>{const id=editId;openPicker({value:"",maxToday:true,noClear:true,onPick:v=>{if(!v)return;closeSheet();markDone(id,v)}})};
+$("#sh-done").onclick=()=>{saveEdit();const id=editId;editId=null;closeSheet();markDone(id)};
+$("#sh-doneon").onclick=()=>{const id=editId;openPicker({value:"",maxToday:true,noClear:true,onPick:v=>{if(!v)return;saveEdit();editId=null;closeSheet();markDone(id,v)}})};
 
 /* ---------- date picker: always opens on the current month ---------- */
 let pk=null,pkMonth=null;
@@ -556,11 +554,11 @@ $("#pk-grid").addEventListener("click",e=>{const b=e.target.closest("[data-day]"
 $("#pk-today").onclick=()=>{const f=pk.onPick;closePicker();f(TODAY)};
 $("#pk-clear").onclick=()=>{const f=pk.onPick;closePicker();f(null)};
 $("#pk-cancel").onclick=closePicker;$("#pk-scrim").onclick=closePicker;
-$("#sh-snooze1").onclick=()=>{const id=editId;closeSheet();snooze(id,1)};
-$("#sh-snooze7").onclick=()=>{const id=editId;closeSheet();snooze(id,7)};
+$("#sh-snooze1").onclick=()=>{saveEdit();const id=editId;editId=null;closeSheet();snooze(id,1)};
+$("#sh-snooze7").onclick=()=>{saveEdit();const id=editId;editId=null;closeSheet();snooze(id,7)};
 $("#sh-del").onclick=()=>{
   if(!delArmed){delArmed=true;$("#sh-del").classList.add("arm");$("#sh-del").textContent="בטוח? מחק";return}
-  const id=editId,prev=structuredClone(tasks.get(id));closeSheet();removeTask(id);
+  clearTimeout(asTimer);asTimer=null;const id=editId,prev=structuredClone(tasks.get(id));editId=null;closeSheet();removeTask(id);
   showToast(`"${prev.name}" נמחקה`,()=>writeTask(id,prev));
 };
 
