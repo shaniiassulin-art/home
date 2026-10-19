@@ -202,6 +202,13 @@ h1{font-family:var(--f-display);font-weight:400;font-size:26px;line-height:1.1;m
 .ord-list .num{font-variant-numeric:tabular-nums;color:var(--cc);opacity:.6;font-weight:700;width:1.2em}
 .ord-list button{width:38px;height:38px;border-radius:10px;border:0;background:var(--surface);color:var(--cc);display:grid;place-items:center}
 .ord-list button:disabled{opacity:.3;cursor:default}
+.ord-list li.editing,.ord-list li.confirm{padding-inline-start:8px}
+.ord-list li.editing input{flex:1;min-width:0;border:0;border-radius:10px;background:var(--surface);color:var(--ink);padding:9px 10px;font:inherit}
+.ord-list .txtb{width:auto;padding:0 12px;font-weight:700;font-size:14px;color:var(--cc)}
+.ord-list .txtb.plain{background:transparent;color:var(--muted)}
+.ord-list .txtb.danger{background:var(--late);color:#fff}
+.ord-list li.confirm .nm{font-size:14px}
+.ord-msg{margin:8px 0 0;color:var(--late);font-size:13.5px;font-weight:600}
 .btn{border:1px solid var(--line);background:transparent;border-radius:12px;padding:11px 10px;font-weight:700;font-size:15px}
 .btn.primary{background:var(--accent);border-color:var(--accent);color:var(--accent-ink)}
 .btn.danger{color:var(--late);border-color:var(--late-soft)}
@@ -327,9 +334,10 @@ details.more summary .count{font-weight:500;font-size:13px;margin-inline-start:8
 </div>
 <div class="pick-scrim" id="ord-scrim"></div>
 <div class="picker ordp" id="ordp" role="dialog" aria-modal="true" aria-labelledby="ord-title">
-  <div class="pk-head"><b id="ord-title">סדר הקטגוריות</b></div>
-  <p class="ord-hint">החצים מזיזים קטגוריה למעלה או למטה. הסדר נשמר מיד ומופיע בכל המכשירים.</p>
+  <div class="pk-head"><b id="ord-title">ניהול קטגוריות</b></div>
+  <p class="ord-hint">החצים משנים את הסדר. העיפרון משנה שם, והפח מוחק. כל שינוי נשמר מיד ומופיע בכל המכשירים.</p>
   <ol class="ord-list" id="ord-list"></ol>
+  <p class="ord-msg" id="ord-msg" role="alert" hidden></p>
   <button type="button" class="btn primary" id="ord-done" style="width:100%;margin-top:12px">סיום</button>
 </div>
 <div class="toast" id="toast" role="status"><span id="toast-t"></span><button id="toast-undo">ביטול</button></div>
@@ -341,12 +349,14 @@ const CAT={high:"משימות לשבוע הזה",mid:"חשיבות בינוני�
 const CATNUM={high:1,mid:2,low:3,none:0};
 let extraTypes=[];
 function catKey(t){return t.priority||"none"}
-function catLabel(k){return CAT[k]??(k.startsWith("c:")?k.slice(2):k)}
+function catLabel(k){return settings.labels?.[k]||CAT[k]||(k.startsWith("c:")?k.slice(2):k)}
 function catNum(k){if(k in CATNUM)return CATNUM[k];let h=0;for(const ch of k)h=(h*31+ch.charCodeAt(0))>>>0;return 4+h%4}
 function catStyle(k){const n=catNum(k);return `--cc:var(--c${n});--cbg:var(--c${n}-bg);--cline:var(--c${n}-line)`}
 function allCats(){
   const custom=new Set(extraTypes);tasks.forEach(t=>{const k=catKey(t);if(k.startsWith("c:"))custom.add(k)});
-  const def=["high","mid",...[...custom].sort((a,b)=>a.localeCompare(b,"he")),"low","none"];
+  /* a deleted built-in type stays hidden, unless some task still carries it */
+  const used=new Set([...tasks.values()].map(catKey)),hidden=settings.hidden||[];
+  const def=["high","mid",...[...custom].sort((a,b)=>catLabel(a).localeCompare(catLabel(b),"he")),"low","none"].filter(k=>k==="none"||!hidden.includes(k)||used.has(k));
   const ord=(settings.catOrder||[]).filter(k=>def.includes(k));
   /* categories not yet placed by hand keep their default spot: new ones go just before "-" */
   for(const k of def)if(!ord.includes(k)){const i=k==="none"?ord.length:Math.max(0,ord.indexOf("none"));ord.splice(i<0?ord.length:i,0,k)}
@@ -545,7 +555,7 @@ function render(){
   }
   if(view==="category"){
     const byRem=a=>a.sort((x,y)=>(x.rem??1e9)-(y.rem??1e9));
-    main.innerHTML=`<div class="cat-tools"><button class="btn ghost" id="cat-order"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M7 4v16M3 8l4-4 4 4M17 20V4M13 16l4 4 4-4"/></svg>סדר הקטגוריות</button></div>`+allCats().map(c=>group("cat",esc(c==="none"?"ללא סוג":catLabel(c)),byRem(items.filter(t=>catKey(t)===c)),true,false,catStyle(c))).join("");
+    main.innerHTML=`<div class="cat-tools"><button class="btn ghost" id="cat-order"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M7 4v16M3 8l4-4 4 4M17 20V4M13 16l4 4 4-4"/></svg>ניהול קטגוריות</button></div>`+allCats().map(c=>group("cat",esc(c==="none"?"ללא סוג":catLabel(c)),byRem(items.filter(t=>catKey(t)===c)),true,false,catStyle(c))).join("");
     return;
   }
   if(view==="room"){
@@ -633,10 +643,11 @@ $("#f-type").addEventListener("click",e=>{
   if(e.target.closest("#f-addtype")){$("#f-newtype").hidden=false;$("#f-newtype-in").value="";$("#f-newtype-in").focus();return}
   const b=e.target.closest("[data-type]");if(b){editType=b.dataset.type;renderTypes();autosave()}
 });
+const keyTaken=k=>[...tasks.values()].some(t=>catKey(t)===k)||extraTypes.includes(k)||!!settings.labels?.[k];
 function addType(){
   const name=$("#f-newtype-in").value.trim().replace(/\s+/g," ");if(!name)return;
-  const builtin=Object.entries(CAT).find(([,v])=>v===name);
-  const k=builtin?builtin[0]:"c:"+name;
+  let k=allCats().find(c=>catLabel(c)===name);
+  if(!k){k="c:"+name;while(keyTaken(k))k+="·";if(k!=="c:"+name)writeSettings({...settings,labels:{...(settings.labels||{}),[k]:name}})}
   if(k.startsWith("c:")&&!extraTypes.includes(k))extraTypes.push(k);
   editType=k;$("#f-newtype").hidden=true;renderTypes();autosave();
 }
@@ -673,7 +684,7 @@ function openSheet(id){
 $("#sh-more").addEventListener("toggle",()=>{try{localStorage.setItem("house-more",$("#sh-more").open?"1":"0")}catch(e){}});
 function closeSheet(){if(asTimer)saveEdit();$("#scrim").classList.remove("on");$("#sheet").classList.remove("on");editId=null}
 $("#scrim").onclick=closeSheet;
-document.addEventListener("keydown",e=>{if(e.key==="Escape"){if(pk)closePicker();else if($("#ordp").classList.contains("on"))closeOrder();else closeSheet()}});
+document.addEventListener("keydown",e=>{if(e.key==="Escape"){if(pk)closePicker();else if($("#ordp").classList.contains("on")){if(ordEdit||ordDel){ordEdit=ordDel=null;renderOrder()}else closeOrder()}else closeSheet()}});
 $("#add").onclick=()=>openSheet(null);
 $("#sh-save").onclick=()=>{
   if(editId){closeSheet();return}
@@ -720,19 +731,61 @@ $("#sh-del").onclick=()=>{
   showToast(`"${prev.name}" נמחקה`,()=>writeTask(id,prev));
 };
 
-/* ---------- category order ---------- */
-function renderOrder(){
-  const list=allCats(),up='<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="m6 15 6-6 6 6"/></svg>',dn='<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="m6 9 6 6 6-6"/></svg>';
-  $("#ord-list").innerHTML=list.map((k,i)=>`<li style="${catStyle(k)}"><span class="num">${i+1}</span><span class="nm">${esc(k==="none"?"ללא סוג (-)":catLabel(k))}</span><button type="button" data-mv="${esc(k)}" data-d="-1" aria-label="הזזה למעלה"${i===0?" disabled":""}>${up}</button><button type="button" data-mv="${esc(k)}" data-d="1" aria-label="הזזה למטה"${i===list.length-1?" disabled":""}>${dn}</button></li>`).join("");
+/* ---------- categories: order, rename, delete (all synced through settings) ---------- */
+const IC={
+  up:'<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="m6 15 6-6 6 6"/></svg>',
+  dn:'<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="m6 9 6 6 6-6"/></svg>',
+  pen:'<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 20h4L19 9l-4-4L4 16z"/></svg>',
+  bin:'<svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 7h16M9 7V4h6v3M6 7l1 13h10l1-13"/></svg>'
+};
+let ordEdit=null,ordDel=null;
+function orderRow(k,i,len){
+  const st=catStyle(k);
+  if(k===ordEdit)return `<li style="${st}" class="editing"><input id="ord-in" type="text" maxlength="30" value="${esc(catLabel(k))}" aria-label="שם הקטגוריה"><button type="button" class="txtb" data-save="${esc(k)}">שמירה</button><button type="button" class="txtb plain" data-cancel="1">ביטול</button></li>`;
+  const n=[...tasks.values()].filter(t=>catKey(t)===k).length;
+  if(k===ordDel)return `<li style="${st}" class="confirm"><span class="nm">${n?`${n} משימות יעברו ל"ללא סוג". למחוק?`:"למחוק את הקטגוריה?"}</span><button type="button" class="txtb danger" data-delok="${esc(k)}">מחיקה</button><button type="button" class="txtb plain" data-cancel="1">ביטול</button></li>`;
+  const fixed=k==="none";
+  return `<li style="${st}"><span class="num">${i+1}</span><span class="nm">${esc(fixed?"ללא סוג (-)":catLabel(k))}</span>`+
+    (fixed?"":`<button type="button" data-ren="${esc(k)}" aria-label="שינוי שם">${IC.pen}</button><button type="button" data-del="${esc(k)}" aria-label="מחיקה">${IC.bin}</button>`)+
+    `<button type="button" data-mv="${esc(k)}" data-d="-1" aria-label="הזזה למעלה"${i===0?" disabled":""}>${IC.up}</button><button type="button" data-mv="${esc(k)}" data-d="1" aria-label="הזזה למטה"${i===len-1?" disabled":""}>${IC.dn}</button></li>`;
 }
-function openOrder(){renderOrder();$("#ord-scrim").classList.add("on");$("#ordp").classList.add("on")}
-function closeOrder(){$("#ord-scrim").classList.remove("on");$("#ordp").classList.remove("on")}
+function renderOrder(){
+  const list=allCats();$("#ord-list").innerHTML=list.map((k,i)=>orderRow(k,i,list.length)).join("");
+  const inp=$("#ord-in");if(inp){inp.focus();inp.select()}
+  $("#ord-msg").hidden=true;
+}
+function ordMsg(t){const m=$("#ord-msg");m.textContent=t;m.hidden=false}
+function openOrder(){ordEdit=ordDel=null;renderOrder();$("#ord-scrim").classList.add("on");$("#ordp").classList.add("on")}
+function closeOrder(){ordEdit=ordDel=null;$("#ord-scrim").classList.remove("on");$("#ordp").classList.remove("on")}
+function saveRename(k){
+  const name=($("#ord-in")?.value||"").trim().replace(/\s+/g," ");
+  if(!name){ordMsg("צריך שם לקטגוריה");return}
+  if(name==="-"||name==="ללא סוג"||allCats().some(c=>c!==k&&catLabel(c)===name)){ordMsg("כבר יש קטגוריה בשם הזה");return}
+  ordEdit=null;writeSettings({...settings,labels:{...(settings.labels||{}),[k]:name}});renderOrder();
+}
+function deleteCat(k){
+  const prevSettings=structuredClone(settings),moved=[...tasks.entries()].filter(([,t])=>catKey(t)===k);
+  const label=catLabel(k);ordDel=null;
+  extraTypes=extraTypes.filter(x=>x!==k);
+  moved.forEach(([id,t])=>writeTask(id,{...t,priority:"none"}));
+  const labels={...(settings.labels||{})};delete labels[k];
+  writeSettings({...settings,labels,hidden:k in CAT?[...new Set([...(settings.hidden||[]),k])]:(settings.hidden||[]),catOrder:(settings.catOrder||[]).filter(x=>x!==k)});
+  renderOrder();
+  showToast(`"${label}" נמחקה${moved.length?` · ${moved.length} משימות עברו ל"ללא סוג"`:""}`,()=>{moved.forEach(([id,t])=>writeTask(id,t));writeSettings(prevSettings);if($("#ordp").classList.contains("on"))renderOrder()});
+}
 $("#ord-list").addEventListener("click",e=>{
-  const b=e.target.closest("[data-mv]");if(!b||b.disabled)return;
+  const t=e.target;
+  const sv=t.closest("[data-save]");if(sv){saveRename(sv.dataset.save);return}
+  if(t.closest("[data-cancel]")){ordEdit=ordDel=null;renderOrder();return}
+  const rn=t.closest("[data-ren]");if(rn){ordDel=null;ordEdit=rn.dataset.ren;renderOrder();return}
+  const dl=t.closest("[data-del]");if(dl){ordEdit=null;ordDel=dl.dataset.del;renderOrder();return}
+  const ok=t.closest("[data-delok]");if(ok){deleteCat(ok.dataset.delok);return}
+  const b=t.closest("[data-mv]");if(!b||b.disabled)return;
   const list=allCats(),i=list.indexOf(b.dataset.mv),j=i+(+b.dataset.d);if(i<0||j<0||j>=list.length)return;
   [list[i],list[j]]=[list[j],list[i]];writeSettings({...settings,catOrder:list});renderOrder();
   const nb=$(`#ord-list [data-mv="${CSS.escape(b.dataset.mv)}"][data-d="${b.dataset.d}"]`);if(nb&&!nb.disabled)nb.focus();
 });
+$("#ord-list").addEventListener("keydown",e=>{if(e.target.id==="ord-in"){if(e.key==="Enter"){e.preventDefault();saveRename(ordEdit)}else if(e.key==="Escape"){e.stopPropagation();ordEdit=null;renderOrder()}}});
 $("#ord-done").onclick=closeOrder;$("#ord-scrim").onclick=closeOrder;
 document.addEventListener("click",e=>{if(e.target.closest("#cat-order"))openOrder()});
 
