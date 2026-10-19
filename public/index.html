@@ -84,7 +84,8 @@ h1{font-family:var(--f-display);font-weight:400;font-size:26px;line-height:1.1;m
 .summary{margin-top:18px;display:flex;gap:8px}
 .stat{flex:1;display:flex;align-items:baseline;gap:6px;background:transparent;border:1px solid var(--line);border-radius:12px;padding:9px 12px;text-align:right;color:var(--muted);font-size:14px}
 .stat b{font-family:var(--f-display);font-weight:400;font-size:20px;font-variant-numeric:tabular-nums;line-height:1}
-.stat.late b{color:var(--late)} .stat.today b{color:var(--soon)} .stat.ok b{color:var(--ok)}
+.stat.late b{color:var(--late)} .stat.wkstat b{color:var(--wk)}
+.stat.wkstat[aria-current="true"]{border-color:var(--wk);background:var(--wk-bg);color:var(--ink)}
 .stat[aria-pressed="true"]{border-color:currentColor;color:var(--ink);background:var(--sunk)}
 
 .tools{margin-top:16px;display:flex;flex-direction:column;gap:10px}
@@ -191,6 +192,16 @@ h1{font-family:var(--f-display);font-weight:400;font-size:26px;line-height:1.1;m
 .pk-grid button.today{box-shadow:inset 0 0 0 2px var(--accent);color:var(--accent);font-weight:800}
 .pk-grid button.sel{background:var(--accent);color:var(--accent-ink);font-weight:800;box-shadow:none}
 .pk-foot{display:grid;grid-template-columns:repeat(3,1fr);gap:8px;margin-top:10px}
+.cat-tools{display:flex;justify-content:flex-end;margin-top:14px;margin-bottom:-4px}
+.cat-tools .btn{display:flex;align-items:center;gap:6px;padding:6px 4px}
+.ordp{max-height:calc(100% - 48px);overflow-y:auto}
+.ord-hint{margin:0 0 10px;color:var(--muted);font-size:13.5px}
+.ord-list{list-style:none;margin:0;padding:0;display:flex;flex-direction:column;gap:6px}
+.ord-list li{display:flex;align-items:center;gap:8px;background:var(--cbg);border-radius:12px;padding:6px 6px 6px 6px;padding-inline-start:12px}
+.ord-list .nm{flex:1;min-width:0;font-weight:700;color:var(--cc);overflow-wrap:anywhere}
+.ord-list .num{font-variant-numeric:tabular-nums;color:var(--cc);opacity:.6;font-weight:700;width:1.2em}
+.ord-list button{width:38px;height:38px;border-radius:10px;border:0;background:var(--surface);color:var(--cc);display:grid;place-items:center}
+.ord-list button:disabled{opacity:.3;cursor:default}
 .btn{border:1px solid var(--line);background:transparent;border-radius:12px;padding:11px 10px;font-weight:700;font-size:15px}
 .btn.primary{background:var(--accent);border-color:var(--accent);color:var(--accent-ink)}
 .btn.danger{color:var(--late);border-color:var(--late-soft)}
@@ -240,9 +251,8 @@ details.more summary .count{font-weight:500;font-size:13px;margin-inline-start:8
   </header>
 
   <section class="summary" aria-label="סיכום">
+    <button class="stat wkstat" id="st-wk" data-go="week"><b>–</b>לעשות השבוע</button>
     <button class="stat late" id="st-late" data-f="late"><b>–</b>באיחור</button>
-    <button class="stat today" id="st-today" data-f="today"><b>–</b>להיום</button>
-    <button class="stat ok" id="st-week" data-f="week"><b>–</b>ב־7 ימים</button>
   </section>
   <div class="banner" id="banner" hidden></div>
 
@@ -315,6 +325,13 @@ details.more summary .count{font-weight:500;font-size:13px;margin-inline-start:8
     <button type="button" class="btn" id="pk-cancel">ביטול</button>
   </div>
 </div>
+<div class="pick-scrim" id="ord-scrim"></div>
+<div class="picker ordp" id="ordp" role="dialog" aria-modal="true" aria-labelledby="ord-title">
+  <div class="pk-head"><b id="ord-title">סדר הקטגוריות</b></div>
+  <p class="ord-hint">החצים מזיזים קטגוריה למעלה או למטה. הסדר נשמר מיד ומופיע בכל המכשירים.</p>
+  <ol class="ord-list" id="ord-list"></ol>
+  <button type="button" class="btn primary" id="ord-done" style="width:100%;margin-top:12px">סיום</button>
+</div>
 <div class="toast" id="toast" role="status"><span id="toast-t"></span><button id="toast-undo">ביטול</button></div>
 
 <script>
@@ -329,7 +346,11 @@ function catNum(k){if(k in CATNUM)return CATNUM[k];let h=0;for(const ch of k)h=(
 function catStyle(k){const n=catNum(k);return `--cc:var(--c${n});--cbg:var(--c${n}-bg);--cline:var(--c${n}-line)`}
 function allCats(){
   const custom=new Set(extraTypes);tasks.forEach(t=>{const k=catKey(t);if(k.startsWith("c:"))custom.add(k)});
-  return["high","mid",...[...custom].sort((a,b)=>a.localeCompare(b,"he")),"low","none"];
+  const def=["high","mid",...[...custom].sort((a,b)=>a.localeCompare(b,"he")),"low","none"];
+  const ord=(settings.catOrder||[]).filter(k=>def.includes(k));
+  /* categories not yet placed by hand keep their default spot: new ones go just before "-" */
+  for(const k of def)if(!ord.includes(k)){const i=k==="none"?ord.length:Math.max(0,ord.indexOf("none"));ord.splice(i<0?ord.length:i,0,k)}
+  return ord;
 }
 const INTS=[3,7,14,21,28,56,90];
 const $=s=>document.querySelector(s);
@@ -359,9 +380,13 @@ function intLabel(n){return({7:"כל שבוע",14:"כל שבועיים",21:"כל
 
 /* ---------- store ---------- */
 let tasks=new Map(), db=null, col=null, mode="loading";
+/* shared settings (category order) live in a special "_settings" document next to the tasks, so every device gets them */
+const SETTINGS_ID="_settings";
+let settings={catOrder:[]};
+function takeSettings(m){const st=m.get(SETTINGS_ID);if(st)settings={catOrder:[],...st};m.delete(SETTINGS_ID);return m}
 const LS="house-tasks-v1";
 function lsLoad(){try{return JSON.parse(localStorage.getItem(LS)||"{}")}catch(e){return{}}}
-function lsSave(){try{localStorage.setItem(LS,JSON.stringify(Object.fromEntries(tasks)))}catch(e){}}
+function lsSave(){try{localStorage.setItem(LS,JSON.stringify({...Object.fromEntries(tasks),[SETTINGS_ID]:settings}))}catch(e){}}
 /* remote (Netlify) sync: every change goes to the server; changes that fail wait in a queue and are resent */
 const PEND="house-pending-v1",CACHE="house-cache-v1";
 let pending={};
@@ -392,7 +417,7 @@ async function pull(){
   try{await flush();const {tasks:t}=await api("GET");
     const m=new Map(Object.entries(t||{}));
     for(const[id,d]of Object.entries(pending)){if(d===null)m.delete(id);else m.set(id,d)}
-    tasks=m;try{localStorage.setItem(CACHE,JSON.stringify(t||{}))}catch(e){}
+    tasks=takeSettings(m);try{localStorage.setItem(CACHE,JSON.stringify(t||{}))}catch(e){}
     if(!Object.keys(pending).length)setSync(true);render();
   }catch(e){setSync(false)}
   finally{pulling=false}
@@ -403,6 +428,12 @@ async function writeTask(id,data){
   tasks.set(id,data);render();
   if(mode==="db"){try{await col.doc(id).set(data)}catch(e){showToast("השמירה נכשלה, נסו שוב",false)}}
   else if(mode==="remote")remoteWrite(id,data);
+  else lsSave();
+}
+async function writeSettings(next){
+  settings=next;render();const data={name:SETTINGS_ID,...next};
+  if(mode==="db"){try{await col.doc(SETTINGS_ID).set(data)}catch(e){showToast("השמירה נכשלה, נסו שוב",false)}}
+  else if(mode==="remote")remoteWrite(SETTINGS_ID,data);
   else lsSave();
 }
 async function removeTask(id){
@@ -441,8 +472,9 @@ function sortTasks(a){return a.sort((x,y)=>{
 
 function renderSummary(){
   const all=[...tasks.values()].map(remOf);
-  const late=all.filter(r=>r!=null&&r<0).length, today=all.filter(r=>r===0).length, week=all.filter(r=>r!=null&&r>=0&&r<=7).length;
-  $("#st-late b").textContent=late;$("#st-today b").textContent=today;$("#st-week b").textContent=week;
+  const late=all.filter(r=>r!=null&&r<0).length, wk=[...tasks.values()].filter(t=>t.thisWeek).length;
+  $("#st-late b").textContent=late;$("#st-wk b").textContent=wk;
+  $("#st-wk").setAttribute("aria-current",view==="week"?"true":"false");
   document.querySelectorAll(".stat").forEach(b=>b.setAttribute("aria-pressed",quick===b.dataset.f?"true":"false"));
 }
 
@@ -513,7 +545,7 @@ function render(){
   }
   if(view==="category"){
     const byRem=a=>a.sort((x,y)=>(x.rem??1e9)-(y.rem??1e9));
-    main.innerHTML=allCats().map(c=>group("cat",esc(c==="none"?"ללא סוג":catLabel(c)),byRem(items.filter(t=>catKey(t)===c)),true,false,catStyle(c))).join("");
+    main.innerHTML=`<div class="cat-tools"><button class="btn ghost" id="cat-order"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M7 4v16M3 8l4-4 4 4M17 20V4M13 16l4 4 4-4"/></svg>סדר הקטגוריות</button></div>`+allCats().map(c=>group("cat",esc(c==="none"?"ללא סוג":catLabel(c)),byRem(items.filter(t=>catKey(t)===c)),true,false,catStyle(c))).join("");
     return;
   }
   if(view==="room"){
@@ -558,6 +590,7 @@ document.addEventListener("click",e=>{
     prev.forEach(([id,t])=>writeTask(id,{...t,thisWeek:false}));
     showToast("הרשימה של השבוע נוקתה",()=>prev.forEach(([id,t])=>writeTask(id,t)));return}
   const c=e.target.closest("[data-r]");if(c){room=c.dataset.r;saveUI();render();return}
+  const g=e.target.closest("[data-go]");if(g){view=view==="week"?"category":"week";quick=null;picking=false;saveUI();render();return}
   const s=e.target.closest(".stat");if(s){quick=quick===s.dataset.f?null:s.dataset.f;if(view==="history"||view==="week")view="category";render();return}
   const v=e.target.closest("#views button");if(v){view=v.dataset.v;quick=null;picking=false;saveUI();render();return}
 });
@@ -640,7 +673,7 @@ function openSheet(id){
 $("#sh-more").addEventListener("toggle",()=>{try{localStorage.setItem("house-more",$("#sh-more").open?"1":"0")}catch(e){}});
 function closeSheet(){if(asTimer)saveEdit();$("#scrim").classList.remove("on");$("#sheet").classList.remove("on");editId=null}
 $("#scrim").onclick=closeSheet;
-document.addEventListener("keydown",e=>{if(e.key==="Escape"){if(pk)closePicker();else closeSheet()}});
+document.addEventListener("keydown",e=>{if(e.key==="Escape"){if(pk)closePicker();else if($("#ordp").classList.contains("on"))closeOrder();else closeSheet()}});
 $("#add").onclick=()=>openSheet(null);
 $("#sh-save").onclick=()=>{
   if(editId){closeSheet();return}
@@ -687,6 +720,22 @@ $("#sh-del").onclick=()=>{
   showToast(`"${prev.name}" נמחקה`,()=>writeTask(id,prev));
 };
 
+/* ---------- category order ---------- */
+function renderOrder(){
+  const list=allCats(),up='<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="m6 15 6-6 6 6"/></svg>',dn='<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="m6 9 6 6 6-6"/></svg>';
+  $("#ord-list").innerHTML=list.map((k,i)=>`<li style="${catStyle(k)}"><span class="num">${i+1}</span><span class="nm">${esc(k==="none"?"ללא סוג (-)":catLabel(k))}</span><button type="button" data-mv="${esc(k)}" data-d="-1" aria-label="הזזה למעלה"${i===0?" disabled":""}>${up}</button><button type="button" data-mv="${esc(k)}" data-d="1" aria-label="הזזה למטה"${i===list.length-1?" disabled":""}>${dn}</button></li>`).join("");
+}
+function openOrder(){renderOrder();$("#ord-scrim").classList.add("on");$("#ordp").classList.add("on")}
+function closeOrder(){$("#ord-scrim").classList.remove("on");$("#ordp").classList.remove("on")}
+$("#ord-list").addEventListener("click",e=>{
+  const b=e.target.closest("[data-mv]");if(!b||b.disabled)return;
+  const list=allCats(),i=list.indexOf(b.dataset.mv),j=i+(+b.dataset.d);if(i<0||j<0||j>=list.length)return;
+  [list[i],list[j]]=[list[j],list[i]];writeSettings({...settings,catOrder:list});renderOrder();
+  const nb=$(`#ord-list [data-mv="${CSS.escape(b.dataset.mv)}"][data-d="${b.dataset.d}"]`);if(nb&&!nb.disabled)nb.focus();
+});
+$("#ord-done").onclick=closeOrder;$("#ord-scrim").onclick=closeOrder;
+document.addEventListener("click",e=>{if(e.target.closest("#cat-order"))openOrder()});
+
 /* ---------- no zoom ---------- */
 ["gesturestart","gesturechange","gestureend"].forEach(ev=>document.addEventListener(ev,e=>e.preventDefault(),{passive:false}));
 document.addEventListener("touchmove",e=>{if(e.touches.length>1)e.preventDefault()},{passive:false});
@@ -701,12 +750,12 @@ async function startRemote(){
     const r=await fetch("/api/tasks",{cache:"no-store"});
     if(r.status===404)return false;
     if(!r.ok)throw new Error();
-    mode="remote";tasks=new Map(Object.entries((await r.json()).tasks||{}));
-    try{localStorage.setItem(CACHE,JSON.stringify(Object.fromEntries(tasks)))}catch(e){}
+    mode="remote";tasks=takeSettings(new Map(Object.entries((await r.json()).tasks||{})));
+    try{localStorage.setItem(CACHE,JSON.stringify({...Object.fromEntries(tasks),[SETTINGS_ID]:settings}))}catch(e){}
     await pull();
   }catch(e){
     if(!cached)return false;
-    mode="remote";tasks=new Map(Object.entries(cached));setSync(false);
+    mode="remote";tasks=takeSettings(new Map(Object.entries(cached)));setSync(false);
   }
   render();
   setInterval(()=>{if(document.visibilityState==="visible")pull()},15000);
@@ -719,15 +768,15 @@ async function startRemote(){
   try{db=window.claude?.use?await window.claude.use("db"):null}catch(e){db=null}
   if(db){
     col=db.collection("tasks");mode="db";
-    col.onSnapshot(snap=>{tasks=new Map(snap.docs.map(d=>[d.id,d.data()]));render()},
+    col.onSnapshot(snap=>{tasks=takeSettings(new Map(snap.docs.map(d=>[d.id,d.data()])));render()},
       ()=>{$("#banner").hidden=false;$("#banner").textContent="אין חיבור לשמירה כרגע. השינויים יישמרו כשהחיבור יחזור."});
   }else{
     mode="local";let saved=lsLoad(),seeded=null;
     try{seeded=localStorage.getItem("house-seeded")}catch(e){}
     if(!Object.keys(saved).length&&!seeded&&window.HOUSE_SEED){
-      saved=structuredClone(window.HOUSE_SEED);tasks=new Map(Object.entries(saved));lsSave();
+      saved=structuredClone(window.HOUSE_SEED);tasks=takeSettings(new Map(Object.entries(saved)));lsSave();
       try{localStorage.setItem("house-seeded","1")}catch(e){}
-    }else tasks=new Map(Object.entries(saved));
+    }else tasks=takeSettings(new Map(Object.entries(saved)));
     $("#banner").hidden=false;$("#banner").textContent="הנתונים נשמרים בדפדפן הזה בלבד, ולא מסתנכרנים בין מכשירים.";
     render();
   }
