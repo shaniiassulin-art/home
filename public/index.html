@@ -35,6 +35,7 @@
   --c5:#7A4E93; --c5-bg:#F4EEF8; --c5-line:#E4D6EE;
   --c6:#A63F6B; --c6-bg:#FAEDF3; --c6-line:#F0D3E0;
   --c7:#5E7330; --c7-bg:#F1F5E8; --c7-line:#DDE6C8;
+  --wk:#4B53B8; --wk-bg:#ECEDFB;
   --f-display:"Secular One","Assistant",system-ui,sans-serif;
   --f-body:"Assistant",system-ui,-apple-system,"Segoe UI",Arial,sans-serif;
 }
@@ -50,7 +51,8 @@
   --c4:#6FCDBD; --c4-bg:#152824; --c4-line:#1F3A34;
   --c5:#C8A3E0; --c5-bg:#251D2C; --c5-line:#352A40;
   --c6:#EE96BB; --c6-bg:#2C1A23; --c6-line:#402633;
-  --c7:#B4CC7E; --c7-bg:#1F2616; --c7-line:#2D3820; color-scheme:dark}}
+  --c7:#B4CC7E; --c7-bg:#1F2616; --c7-line:#2D3820;
+  --wk:#A9AEF5; --wk-bg:#23264A; color-scheme:dark}}
 :root[data-theme="dark"]{
   --bg:#121715; --surface:#171E1B; --sunk:#1E2723; --line:#28322E;
   --ink:#E8EEEA; --muted:#97A69F; --accent:#6FC1A3; --accent-ink:#0E1A16; --accent-soft:#1F3A31;
@@ -63,7 +65,8 @@
   --c4:#6FCDBD; --c4-bg:#152824; --c4-line:#1F3A34;
   --c5:#C8A3E0; --c5-bg:#251D2C; --c5-line:#352A40;
   --c6:#EE96BB; --c6-bg:#2C1A23; --c6-line:#402633;
-  --c7:#B4CC7E; --c7-bg:#1F2616; --c7-line:#2D3820; color-scheme:dark}
+  --c7:#B4CC7E; --c7-bg:#1F2616; --c7-line:#2D3820;
+  --wk:#A9AEF5; --wk-bg:#23264A; color-scheme:dark}
 *{box-sizing:border-box}
 [hidden]{display:none!important}
 html{touch-action:manipulation;-webkit-text-size-adjust:100%;text-size-adjust:100%}
@@ -153,8 +156,23 @@ h1{font-family:var(--f-display);font-weight:400;font-size:26px;line-height:1.1;m
 .sheet h3{font-family:var(--f-display);font-weight:400;font-size:24px;margin:0 0 4px}
 .sheet .sub{color:var(--muted);font-size:13.5px;margin-bottom:12px;min-height:1.4em}
 .sheet .sub.saved{color:var(--ok)}
-.quick{margin-bottom:16px}
+.quick{margin-bottom:16px;display:grid;grid-template-columns:1fr 1fr;gap:8px}
 .quick .btn{width:100%}
+.btn.wk-on{background:var(--wk-bg);border-color:var(--wk);color:var(--wk)}
+.wk{display:inline-block;vertical-align:2px;margin-inline-start:6px;font-size:11.5px;font-weight:800;color:var(--wk);background:var(--wk-bg);border-radius:999px;padding:1px 8px;letter-spacing:.02em}
+.seg .n{font-size:12px;font-weight:800;margin-inline-start:4px;color:var(--wk);background:var(--wk-bg);border-radius:999px;padding:0 6px}
+.wk-head{display:flex;align-items:center;justify-content:space-between;gap:10px;margin-top:22px}
+.wk-head b{font-family:var(--f-display);font-weight:400;font-size:20px}
+.wk-head span{display:block;color:var(--muted);font-size:13.5px}
+.wk-head .btn{flex:none;padding:9px 14px}
+.wk-foot{display:flex;justify-content:center;margin-top:22px}
+.btn.ghost{border-color:transparent;color:var(--muted);font-weight:600;font-size:14px}
+.btn.ghost.arm{color:var(--late)}
+.pickrow{display:grid;grid-template-columns:auto 1fr;gap:12px;align-items:center;width:100%;padding:11px 0;border:0;border-bottom:1px solid var(--cline,var(--line));background:none;text-align:right}
+.group.cat .pickrow:last-child{border-bottom:0}
+.pickbox{width:24px;height:24px;border-radius:7px;border:1.5px solid var(--cc,var(--muted));display:grid;place-items:center;color:transparent}
+.pickrow[aria-pressed="true"] .pickbox{background:var(--cc,var(--accent));border-color:var(--cc,var(--accent));color:var(--cbg,#fff)}
+.pickrow[aria-pressed="true"] .name{color:var(--cc,var(--ink))}
 .datebtn{width:100%;border:0;background:var(--sunk);color:var(--ink);border-radius:12px;padding:11px 12px;text-align:right;font-variant-numeric:tabular-nums;display:flex;align-items:center;gap:8px;min-height:46px}
 .datebtn::before{content:"";width:18px;height:18px;flex:none;background:currentColor;opacity:.55;-webkit-mask:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='black' stroke-width='2'%3E%3Crect x='3' y='5' width='18' height='16' rx='3'/%3E%3Cpath d='M3 10h18M8 3v4M16 3v4'/%3E%3C/svg%3E") center/contain no-repeat;mask:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='black' stroke-width='2'%3E%3Crect x='3' y='5' width='18' height='16' rx='3'/%3E%3Cpath d='M3 10h18M8 3v4M16 3v4'/%3E%3C/svg%3E") center/contain no-repeat}
 .datebtn.empty{color:var(--muted)}
@@ -206,7 +224,7 @@ details.more summary .count{font-weight:500;font-size:13px;margin-inline-start:8
 .hint{font-size:12.5px;color:var(--muted);margin-top:4px}
 .histmini{font-size:14px;color:var(--muted);font-variant-numeric:tabular-nums}
 
-.toast{position:fixed;bottom:calc(88px + env(safe-area-inset-bottom,0px));left:50%;transform:translate(-50%,20px);opacity:0;pointer-events:none;background:var(--ink);color:var(--bg);border-radius:14px;padding:10px 14px;display:flex;gap:14px;align-items:center;transition:.2s;z-index:20;max-width:calc(100% - 32px);font-weight:600}
+.toast{position:fixed;bottom:calc(88px + env(safe-area-inset-bottom,0px));left:50%;transform:translate(-50%,20px);opacity:0;pointer-events:none;background:var(--ink);color:var(--bg);border-radius:14px;padding:10px 14px;display:flex;gap:14px;align-items:center;transition:.2s;z-index:20;width:max-content;max-width:calc(100% - 32px);font-weight:600}
 .toast.on{opacity:1;transform:translate(-50%,0);pointer-events:auto}
 .toast button{border:0;background:none;color:var(--accent-soft);font-weight:800;text-decoration:underline}
 .banner{margin-top:14px;font-size:13.5px;color:var(--muted);background:var(--sunk);border-radius:12px;padding:8px 12px}
@@ -224,7 +242,7 @@ details.more summary .count{font-weight:500;font-size:13px;margin-inline-start:8
   <section class="summary" aria-label="סיכום">
     <button class="stat late" id="st-late" data-f="late"><b>–</b>באיחור</button>
     <button class="stat today" id="st-today" data-f="today"><b>–</b>להיום</button>
-    <button class="stat ok" id="st-week" data-f="week"><b>–</b>השבוע</button>
+    <button class="stat ok" id="st-week" data-f="week"><b>–</b>ב־7 ימים</button>
   </section>
   <div class="banner" id="banner" hidden></div>
 
@@ -235,6 +253,7 @@ details.more summary .count{font-weight:500;font-size:13px;margin-inline-start:8
     </div>
     <div class="seg" id="views">
       <button data-v="category" aria-pressed="true">קטגוריות</button>
+      <button data-v="week" aria-pressed="false">לעשות השבוע<span class="n" id="wk-n" hidden></span></button>
       <button data-v="room" aria-pressed="false">חדרים</button>
       <button data-v="history" aria-pressed="false">מה עשינו</button>
     </div>
@@ -254,6 +273,7 @@ details.more summary .count{font-weight:500;font-size:13px;margin-inline-start:8
     <div class="sub" id="sh-sub"></div>
     <div class="quick" id="sh-quick">
       <button class="btn primary" id="sh-done">✓ בוצע היום</button>
+      <button class="btn" id="sh-week"></button>
     </div>
     <div class="field"><label for="f-name">שם המשימה</label><input id="f-name" type="text" placeholder="למשל: ניקוי מקרר"></div>
     <div class="row2">
@@ -357,12 +377,12 @@ function setSync(ok){
   const b=$("#banner");
   if(ok){b.hidden=true}else{b.hidden=false;b.textContent="אין חיבור לשרת כרגע. השינויים נשמרו במכשיר ויישלחו כשהחיבור יחזור."}
 }
-let flushing=false;
+let flushing=false,flushAgain=false;
 async function flush(){
-  if(flushing)return;flushing=true;
-  try{for(const id of Object.keys(pending)){const d=pending[id];
+  if(flushing){flushAgain=true;return}flushing=true;
+  try{do{flushAgain=false;for(const id of Object.keys(pending)){const d=pending[id];
     if(d===null)await api("DELETE",id);else await api("PUT",id,d);
-    if(pending[id]===d){delete pending[id];savePending()}}setSync(true)}
+    if(pending[id]===d){delete pending[id];savePending()}}}while(flushAgain);setSync(true)}
   catch(e){setSync(false)}
   finally{flushing=false}
 }
@@ -394,7 +414,7 @@ async function removeTask(id){
 function newId(){return"t"+Date.now().toString(36)+Math.random().toString(36).slice(2,6)}
 
 /* ---------- UI state ---------- */
-let view="category", room="הכל", quick=null, query="";
+let view="category", room="הכל", quick=null, query="", picking=false, clearArmed=false;
 try{const s=JSON.parse(localStorage.getItem("house-ui2")||"{}");if(s.view&&s.view!=="urgency")view=s.view;if(s.room)room=s.room}catch(e){}
 function saveUI(){try{localStorage.setItem("house-ui2",JSON.stringify({view,room}))}catch(e){}}
 
@@ -429,7 +449,7 @@ function renderSummary(){
 function renderChips(){
   const counts={};[...tasks.values()].forEach(t=>counts[t.room]=(counts[t.room]||0)+1);
   const list=["הכל",...ROOMS.filter(r=>counts[r])];
-  $("#chips").hidden=view==="room";
+  $("#chips").hidden=view==="room"||view==="week";
   $("#chips").innerHTML=list.map(r=>`<button class="chip" data-r="${r}" aria-pressed="${r===room}">${r}${r!=="הכל"?" · "+counts[r]:""}</button>`).join("");
 }
 
@@ -440,7 +460,7 @@ function taskRow(t,showRoom=true,showPrio=true){
   return `<div class="task s-${doneToday?"week":s}${doneToday?" done":""}" data-id="${t.id}">
     <button class="check" data-done="${t.id}" aria-label="סמן כבוצע: ${esc(t.name)}"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3"><path d="m5 12 5 5 9-10"/></svg></button>
     <button class="body" data-open="${t.id}">
-      <div class="name">${esc(t.name)}</div>
+      <div class="name">${esc(t.name)}${t.thisWeek&&view!=="week"?`<span class="wk">השבוע</span>`:""}</div>
       <div class="meta">${showPrio?`<span style="${catStyle(catKey(t))}"><i class="prio"></i> ${esc(catKey(t)==="none"?"ללא סוג":catLabel(catKey(t)))}</span><span class="sep">·</span>`:""}${showRoom?`<span>${esc(t.room)}</span><span class="sep">·</span>`:""}<span>${intLabel(t.interval)}</span></div>
     </button>
     <span class="pill">${doneToday?"בוצע היום":remLabel(t.rem)}</span>
@@ -456,6 +476,7 @@ function render(){
   $("#today").innerHTML=`<b>יום ${weekday().replace("יום ","")}, ${fmt(TODAY)}</b> · ${hebDate()}`;
   document.querySelectorAll("#views button").forEach(b=>b.setAttribute("aria-pressed",b.dataset.v===view?"true":"false"));
   renderSummary();renderChips();
+  {const n=[...tasks.values()].filter(t=>t.thisWeek).length;const el=$("#wk-n");el.hidden=!n;el.textContent=n;}
   const main=$("#main");
   if(mode==="loading"){main.innerHTML=`<div class="empty"><b>טוען את המשימות…</b></div>`;return}
   if(!tasks.size){main.innerHTML=`<div class="empty"><b>עוד אין משימות</b>לחצו על + כדי להוסיף את הראשונה.</div>`;return}
@@ -473,6 +494,23 @@ function render(){
 
   const items=sortTasks(filtered());
   if(!items.length){main.innerHTML=`<div class="empty"><b>אין משימות שמתאימות</b>נסו לשנות חיפוש או סינון.</div>`;return}
+  if(view==="week"){
+    const all=[...tasks.entries()].map(([id,t])=>({id,...t,rem:remOf(t)})).filter(t=>!query||t.name.includes(query.trim()));
+    const order=allCats(),byCat=(a,b)=>order.indexOf(catKey(a))-order.indexOf(catKey(b))||(a.rem??1e9)-(b.rem??1e9);
+    if(picking){
+      const n=all.filter(t=>t.thisWeek).length;
+      let h=`<div class="wk-head"><div><b>בחירת משימות לשבוע</b><span>${n?`נבחרו ${n}`:"סמני את המשימות שתרצי לעשות השבוע"}</span></div><button class="btn primary" id="wk-end">סיום</button></div>`;
+      h+=order.map(c=>{const g=all.filter(t=>catKey(t)===c).sort((a,b)=>(a.rem??1e9)-(b.rem??1e9));if(!g.length)return"";
+        return `<section class="group cat" style="${catStyle(c)}"><h2><span class="dot"></span>${esc(c==="none"?"ללא סוג":catLabel(c))}<span class="cnt">${g.filter(t=>t.thisWeek).length||""}</span></h2><div class="list">${g.map(t=>`<button class="pickrow" data-pick="${t.id}" aria-pressed="${!!t.thisWeek}"><span class="pickbox"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3.2"><path d="m5 12 5 5 9-10"/></svg></span><span class="body"><span class="name" style="display:block">${esc(t.name)}</span><span class="meta"><span>${esc(t.room)}</span><span class="sep">·</span><span>${remLabel(t.rem)}</span></span></span></button>`).join("")}</div></section>`}).join("");
+      main.innerHTML=h;return;
+    }
+    const sel=all.filter(t=>t.thisWeek).sort(byCat);
+    const head=`<div class="wk-head"><div><b>לעשות השבוע</b><span>${sel.length?`${sel.length} משימות · אחרי ביצוע המשימה היא חוזרת לקטגוריה שלה`:"עוד לא נבחרו משימות"}</span></div><button class="btn${sel.length?"":" primary"}" id="wk-pick">${sel.length?"עריכת הבחירה":"בחירת משימות"}</button></div>`;
+    if(!sel.length){main.innerHTML=head+`<div class="empty"><b>הרשימה של השבוע ריקה</b>לחצי על "בחירת משימות" ובחרי מכל קטגוריה מה לעשות השבוע.</div>`;return}
+    main.innerHTML=head+`<section class="group" style="margin-top:14px"><div class="list">${sel.map(t=>taskRow(t,true,true)).join("")}</div></section>`+
+      `<div class="wk-foot"><button class="btn ghost" id="wk-clear">ניקוי הרשימה</button></div>`;
+    return;
+  }
   if(view==="category"){
     const byRem=a=>a.sort((x,y)=>(x.rem??1e9)-(y.rem??1e9));
     main.innerHTML=allCats().map(c=>group("cat",esc(c==="none"?"ללא סוג":catLabel(c)),byRem(items.filter(t=>catKey(t)===c)),true,false,catStyle(c))).join("");
@@ -504,16 +542,24 @@ $("#toast-undo").onclick=()=>{if(undoFn)undoFn();$("#toast").classList.remove("o
 function markDone(id,date=TODAY){
   const t=tasks.get(id);if(!t)return;const prev=structuredClone(t);
   const hist=[date,...(t.history||[]).filter(d=>d!==date)].sort().reverse().slice(0,40);
-  writeTask(id,{...t,last:date,manualNext:null,history:hist});
+  writeTask(id,{...t,last:date,manualNext:null,history:hist,thisWeek:false});
   showToast(`נשמר ✓ "${t.name}" בוצע · הבא ב־${fmt(add(date,t.interval))}`,()=>writeTask(id,prev));
 }
 
 document.addEventListener("click",e=>{
   const d=e.target.closest("[data-done]");if(d){const t=tasks.get(d.dataset.done);if(t&&t.last===TODAY){/* undo today's tick */const h=(t.history||[]).filter(x=>x!==TODAY);writeTask(d.dataset.done,{...t,last:h[0]||null,history:h})}else markDone(d.dataset.done);return}
   const o=e.target.closest("[data-open]");if(o){openSheet(o.dataset.open);return}
+  const pr=e.target.closest("[data-pick]");if(pr){const t=tasks.get(pr.dataset.pick);if(t)writeTask(pr.dataset.pick,{...t,thisWeek:!t.thisWeek});return}
+  if(e.target.closest("#wk-pick")){picking=true;render();window.scrollTo(0,0);return}
+  if(e.target.closest("#wk-end")){picking=false;render();window.scrollTo(0,0);return}
+  const wc=e.target.closest("#wk-clear");if(wc){
+    if(!clearArmed){clearArmed=true;wc.classList.add("arm");wc.textContent="לחצי שוב כדי לנקות את כל הרשימה";setTimeout(()=>{clearArmed=false;if(wc.isConnected){wc.classList.remove("arm");wc.textContent="ניקוי הרשימה"}},4000);return}
+    clearArmed=false;const prev=[...tasks.entries()].filter(([,t])=>t.thisWeek);
+    prev.forEach(([id,t])=>writeTask(id,{...t,thisWeek:false}));
+    showToast("הרשימה של השבוע נוקתה",()=>prev.forEach(([id,t])=>writeTask(id,t)));return}
   const c=e.target.closest("[data-r]");if(c){room=c.dataset.r;saveUI();render();return}
-  const s=e.target.closest(".stat");if(s){quick=quick===s.dataset.f?null:s.dataset.f;if(view==="history")view="category";render();return}
-  const v=e.target.closest("#views button");if(v){view=v.dataset.v;quick=null;saveUI();render();return}
+  const s=e.target.closest(".stat");if(s){quick=quick===s.dataset.f?null:s.dataset.f;if(view==="history"||view==="week")view="category";render();return}
+  const v=e.target.closest("#views button");if(v){view=v.dataset.v;quick=null;picking=false;saveUI();render();return}
 });
 $("#q").addEventListener("input",e=>{query=e.target.value;render()});
 
@@ -579,6 +625,7 @@ function openSheet(id){
   $("#sh-save").textContent=id?"סגירה":"הוספת משימה";$("#sh-save").className=id?"btn":"btn primary";
   $("#sh-del").textContent="מחק משימה";
   $("#sh-quick").hidden=!id;$("#sh-del").hidden=!id;$("#sh-histwrap").hidden=!id||!(t.history||[]).length;
+  renderWeekBtn(t);
   $("#f-name").value=t.name;$("#f-room").value=t.room;editType=catKey(t);$("#f-newtype").hidden=true;renderTypes();editInt=t.interval||7;renderInts();
   setDateBtn($("#f-last"),t.last,"לא בוצע עדיין");$("#f-next").dataset.value=t.manualNext||"";$("#f-notes").value=t.notes||"";
   $("#sh-more-sum").textContent=[t.room,t.notes?"יש הערה":""].filter(Boolean).join(" · ");
@@ -605,6 +652,8 @@ $("#sh-save").onclick=()=>{
   showToast(prev?"השינויים נשמרו":"המשימה נוספה",false);
 };
 $("#sh-done").onclick=()=>{saveEdit();const id=editId;editId=null;closeSheet();markDone(id)};
+function renderWeekBtn(t){const b=$("#sh-week");b.textContent=t?.thisWeek?"✓ נבחרה לשבוע":"+ לעשות השבוע";b.className="btn"+(t?.thisWeek?" wk-on":"")}
+$("#sh-week").onclick=()=>{saveEdit();const t=tasks.get(editId);if(!t)return;const n={...t,thisWeek:!t.thisWeek};writeTask(editId,n);renderWeekBtn(n)};
 
 /* ---------- date picker: always opens on the current month ---------- */
 let pk=null,pkMonth=null;
